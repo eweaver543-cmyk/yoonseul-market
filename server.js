@@ -119,6 +119,8 @@ function normalizeDbShape(db) {
   db.siteSettings ||= { designBanners: [], inquiryChannels: {}, paymentMethods: {}, promotions: [], reviews: [] };
   db.siteSettings.designBanners = (Array.isArray(db.siteSettings.designBanners) ? db.siteSettings.designBanners : [])
     .map((item) => ({ ...item, active: parseBoolean(item.active, false) }));
+  db.siteSettings.promotions = (Array.isArray(db.siteSettings.promotions) ? db.siteSettings.promotions : [])
+    .map(normalizePromotion);
   return db;
 }
 
@@ -586,6 +588,32 @@ function parseBoolean(value, fallback = false) {
   return String(value).toLowerCase() === "true";
 }
 
+function normalizePromotion(item = {}) {
+  const type = item.type === "event" ? "event" : "coupon";
+  const benefitType = ["percent", "amount", "text"].includes(item.benefitType) ? item.benefitType : (type === "event" ? "text" : "percent");
+  return {
+    id: String(item.id || `promotion-${Date.now()}`).trim(),
+    type,
+    title: String(item.title || "").trim().slice(0, 80),
+    code: type === "coupon" ? String(item.code || "").trim().toUpperCase().slice(0, 30) : "",
+    benefitType: type === "event" ? "text" : benefitType,
+    benefitValue: type === "event" ? 0 : Math.max(0, Number(item.benefitValue || 0)),
+    conditionText: String(item.conditionText || "").trim().slice(0, 120),
+    startAt: String(item.startAt || "").trim().slice(0, 10),
+    endAt: String(item.endAt || "").trim().slice(0, 10),
+    active: parseBoolean(item.active, false),
+    description: String(item.description || "").trim().slice(0, 1000)
+  };
+}
+
+function seoulDateKey(value = new Date()) {
+  return new Date(value).toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
+}
+
+function isPromotionVisible(item, today = seoulDateKey()) {
+  return item.active === true && Boolean(item.title) && (!item.startAt || item.startAt <= today) && (!item.endAt || item.endAt >= today);
+}
+
 function normalizeSalesProductName(value) {
   return String(value || "").toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
 }
@@ -665,6 +693,14 @@ async function handleApi(req, res, url) {
 
   if (url.pathname === "/api/site-settings" && req.method === "GET") {
     return send(res, 200, db.siteSettings || {});
+  }
+
+  if (url.pathname === "/api/promotions" && req.method === "GET") {
+    const today = seoulDateKey();
+    const promotions = (db.siteSettings.promotions || [])
+      .filter((item) => isPromotionVisible(item, today))
+      .sort((a, b) => String(a.endAt || "9999-12-31").localeCompare(String(b.endAt || "9999-12-31")) || String(b.startAt || "").localeCompare(String(a.startAt || "")));
+    return send(res, 200, { today, promotions });
   }
 
   if (url.pathname === "/api/member/orders" && req.method === "GET") {
@@ -1017,7 +1053,9 @@ async function handleApi(req, res, url) {
       if (!Object.prototype.hasOwnProperty.call(body, key)) continue;
       db.siteSettings[key] = key === "designBanners"
         ? (Array.isArray(body[key]) ? body[key] : []).map((item) => ({ ...item, active: parseBoolean(item.active, false) }))
-        : body[key];
+        : key === "promotions"
+          ? (Array.isArray(body[key]) ? body[key] : []).map(normalizePromotion)
+          : body[key];
     }
     db.siteSettings.updatedAt = new Date().toISOString();
     writeDb(db);

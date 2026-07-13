@@ -9,6 +9,7 @@ let activeRank = "realtime";
 let catalogSignature = "";
 let salesRankings = { realtime: [], weekly: [], monthly: [] };
 let rankingPeriods = { realtime: "최근 24시간", weekly: "최근 7일", monthly: "최근 30일" };
+let promotions = [];
 const DESIGN_STORAGE_KEY = "yoonseulDesignBanners";
 const MEMBER_STORAGE_KEY = "yoonseulCurrentMember";
 const INQUIRY_CHANNEL_STORAGE_KEY = "yoonseulInquiryChannels";
@@ -394,6 +395,49 @@ function showToast(message) {
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[character]));
+}
+
+function promotionBenefitText(item) {
+  if (item.type === "event" || item.benefitType === "text") return item.conditionText || "이벤트 혜택";
+  if (item.benefitType === "amount") return `${won(item.benefitValue)} 할인`;
+  return `${Number(item.benefitValue || 0).toLocaleString("ko-KR")}% 할인`;
+}
+
+function renderPromotions() {
+  const section = document.querySelector("#promotionShowcase");
+  const grid = document.querySelector("#promotionShowcaseGrid");
+  if (!section || !grid) return;
+  section.hidden = promotions.length === 0;
+  if (!promotions.length) {
+    grid.innerHTML = "";
+    return;
+  }
+  grid.innerHTML = promotions.map((item) => `<article class="promotion-card ${item.type}">
+    <div class="promotion-card-top"><span>${item.type === "event" ? "EVENT" : "COUPON"}</span><small>${escapeHtml(item.startAt || "")} ~ ${escapeHtml(item.endAt || "")}</small></div>
+    <h3>${escapeHtml(item.title)}</h3>
+    <strong>${escapeHtml(promotionBenefitText(item))}</strong>
+    <p>${escapeHtml(item.description || item.conditionText || "윤슬마켓의 특별한 혜택을 만나보세요.")}</p>
+    ${item.type === "coupon" && item.code ? `<button type="button" class="promotion-code-button" data-promotion-code="${escapeHtml(item.code)}"><span>${escapeHtml(item.code)}</span><b>코드 복사</b></button>` : `<div class="promotion-event-condition">${escapeHtml(item.conditionText || "이벤트 진행 중")}</div>`}
+  </article>`).join("");
+  document.querySelectorAll("[data-promotion-code]").forEach((button) => button.addEventListener("click", async () => {
+    const code = button.dataset.promotionCode || "";
+    try {
+      await navigator.clipboard.writeText(code);
+      showToast(`쿠폰 코드 ${code}가 복사되었습니다.`);
+    } catch (_) {
+      window.prompt("쿠폰 코드를 복사해 주세요.", code);
+    }
+  }));
+}
+
+async function loadPromotions() {
+  const response = await fetch("/api/promotions", { cache: "no-store" });
+  if (!response.ok) throw new Error("PROMOTIONS_FAILED");
+  const data = await response.json();
+  promotions = Array.isArray(data.promotions) ? data.promotions : [];
+  const updated = document.querySelector("#promotionUpdatedAt");
+  if (updated) updated.textContent = promotions.length ? `${data.today || ""} 기준` : "";
+  renderPromotions();
 }
 
 function isDesignBannerActive(item) {
@@ -783,7 +827,8 @@ async function loadServerSiteSettings() {
 loadServerSiteSettings();
 syncHeaderMemberState();
 updateHeaderScrollShadow();
-Promise.all([loadCatalog(), loadBestSellers()]).catch(() => showToast("상품 또는 판매 순위를 불러오지 못했습니다."));
+Promise.all([loadCatalog(), loadBestSellers(), loadPromotions()]).catch(() => showToast("홈페이지 정보를 불러오지 못했습니다."));
 setInterval(() => loadCatalog(true), 10000);
 setInterval(() => loadBestSellers().catch(() => {}), 10000);
+setInterval(() => loadPromotions().catch(() => {}), 10000);
 setInterval(loadServerSiteSettings, 10000);

@@ -924,7 +924,7 @@ function promotionRowsTemplate(items) {
 
 function promotionsTemplate() {
   const items = getPromotions();
-  const activeItems = items.filter((item) => item.active);
+  const activeItems = items.filter((item) => promotionStatusLabel(item) === "진행중");
   const coupons = items.filter((item) => item.type === "coupon");
   const events = items.filter((item) => item.type === "event");
   return `<div class="view-heading">
@@ -933,8 +933,8 @@ function promotionsTemplate() {
     </div>
     <section class="promotion-summary-grid">
       <article><span><i class="fa-solid fa-bullhorn"></i></span><div><small>전체 프로모션</small><strong>${items.length}<em>건</em></strong></div></article>
-      <article><span><i class="fa-solid fa-ticket"></i></span><div><small>활성 쿠폰</small><strong>${coupons.filter((item) => item.active).length}<em>건</em></strong></div></article>
-      <article><span><i class="fa-solid fa-calendar-check"></i></span><div><small>진행 이벤트</small><strong>${events.filter((item) => item.active).length}<em>건</em></strong></div></article>
+      <article><span><i class="fa-solid fa-ticket"></i></span><div><small>활성 쿠폰</small><strong>${coupons.filter((item) => promotionStatusLabel(item) === "진행중").length}<em>건</em></strong></div></article>
+      <article><span><i class="fa-solid fa-calendar-check"></i></span><div><small>진행 이벤트</small><strong>${events.filter((item) => promotionStatusLabel(item) === "진행중").length}<em>건</em></strong></div></article>
       <article class="highlight"><span><i class="fa-solid fa-bolt"></i></span><div><small>현재 노출중</small><strong>${activeItems.length}<em>건</em></strong></div></article>
     </section>
     <section class="panel promotion-editor-panel">
@@ -1129,7 +1129,7 @@ function savePromotionForm(event) {
   else items.unshift(nextItem);
   savePromotions(items);
   switchView("promotions");
-  showToast(index >= 0 ? "프로모션이 수정되었습니다." : "새 프로모션이 등록되었습니다.");
+  showToast(index >= 0 ? "프로모션이 수정되어 홈페이지에 반영됩니다." : "새 프로모션이 등록되어 홈페이지에 반영됩니다.");
 }
 
 function editPromotion(id) {
@@ -1168,7 +1168,7 @@ function togglePromotion(id) {
   item.active = !item.active;
   savePromotions(items);
   switchView("promotions");
-  showToast(item.active ? "프로모션이 활성화되었습니다." : "프로모션이 비활성화되었습니다.");
+  showToast(item.active ? "프로모션이 활성화되어 홈페이지에 노출됩니다." : "프로모션이 비활성화되어 홈페이지에서 숨겨집니다.");
 }
 
 function applyPromotionFilter(type) {
