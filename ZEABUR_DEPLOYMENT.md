@@ -33,9 +33,9 @@ NODE_ENV=production
 HOST=0.0.0.0
 PORT=3000
 
-ADMIN_EMAIL=eweaver543@gmail.com
-ADMIN_PASSWORD=aa030456
-ADMIN_SESSION_SECRET=please-change-this-to-a-long-random-secret
+ADMIN_EMAIL=your-admin@example.com
+ADMIN_PASSWORD=use-a-long-unique-password
+ADMIN_SESSION_SECRET=use-at-least-32-random-characters-here
 ADMIN_SESSION_TTL_HOURS=24
 
 MAX_BODY_MB=120
@@ -47,7 +47,7 @@ DATA_DIR=/data/yoonseul/data
 UPLOAD_DIR=/data/yoonseul/uploads
 ```
 
-`ADMIN_SESSION_SECRET`는 반드시 길고 랜덤한 문자열로 바꾸는 것을 권장합니다.
+`ADMIN_SESSION_SECRET`는 32자 이상의 길고 랜덤한 문자열이어야 합니다.
 
 ## 4. 이미지/DB 영구 저장 볼륨 설정
 
@@ -117,4 +117,3 @@ npm start
 - http://localhost:3000
 - http://localhost:3000/admin
 - http://localhost:3000/api/health
-

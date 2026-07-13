@@ -24,12 +24,7 @@ npm start
 - 관리자: http://localhost:3000/admin
 - 헬스체크: http://localhost:3000/api/health
 
-기본 관리자 계정:
-
-- 이메일: `eweaver543@gmail.com`
-- 비밀번호: `aa030456`
-
-실서버에서는 반드시 Zeabur 환경변수에서 비밀번호와 세션 시크릿을 변경하세요.
+관리자 계정은 코드에 저장하지 않습니다. 실행 전에 반드시 환경변수로 설정하세요.
 
 ## 필수 환경변수
 
@@ -38,9 +33,9 @@ NODE_ENV=production
 HOST=0.0.0.0
 PORT=3000
 
-ADMIN_EMAIL=eweaver543@gmail.com
-ADMIN_PASSWORD=aa030456
-ADMIN_SESSION_SECRET=change-this-to-a-long-random-secret
+ADMIN_EMAIL=your-admin@example.com
+ADMIN_PASSWORD=use-a-long-unique-password
+ADMIN_SESSION_SECRET=use-at-least-32-random-characters-here
 ADMIN_SESSION_TTL_HOURS=24
 
 MAX_BODY_MB=120
@@ -89,4 +84,3 @@ git branch -M main
 git remote add origin https://github.com/YOUR_ID/YOUR_REPOSITORY.git
 git push -u origin main
 ```
-

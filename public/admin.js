@@ -1,4 +1,6 @@
-let token = sessionStorage.getItem("yoonseulAdmin");
+// 관리자 페이지를 열 때마다 반드시 다시 로그인하도록 이전 인증을 폐기합니다.
+sessionStorage.removeItem("yoonseulAdmin");
+let token = null;
 let dashboardData = { requests: [], users: [], inquiries: [], brands: [], categories: [], products: [], stats: { total: 0, active: 0, estimatedRevenue: 0, byStatus: {} } };
 let currentView = "dashboard";
 let productImages = { main: [], detail: [] };
@@ -2131,4 +2133,4 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") closeMemberModal();
 });
 
-token ? startAdmin().catch(showLogin) : showLogin();
+showLogin();
