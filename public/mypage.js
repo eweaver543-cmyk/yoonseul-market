@@ -1,5 +1,6 @@
 const mypageStore = window.YoonseulCart;
 const mypageApp = document.querySelector("#mypageApp");
+let mypageCatalogProducts = [];
 
 const mypageWon = (value) => `\u20A9${Number(value || 0).toLocaleString("ko-KR")}`;
 const reviewStars = (rating) => "\u2605".repeat(Number(rating || 0)) + "\u2606".repeat(5 - Number(rating || 0));
@@ -27,6 +28,36 @@ function formatOrderDate(value) {
 
 function productDetailUrl(productId) {
   return `/detail.html?id=${encodeURIComponent(productId)}`;
+}
+
+async function loadMypageCatalog() {
+  try {
+    const response = await fetch("/api/catalog", { cache: "no-store" });
+    if (!response.ok) return;
+    const catalog = await response.json();
+    mypageCatalogProducts = Array.isArray(catalog.products) ? catalog.products : [];
+  } catch (_) {}
+}
+
+function catalogProductForOrder(order) {
+  const productId = Number(order.productId || 0);
+  if (productId) {
+    const byId = mypageCatalogProducts.find((product) => Number(product.id) === productId);
+    if (byId) return byId;
+  }
+  const productName = String(order.productName || "").trim();
+  return productName ? mypageCatalogProducts.find((product) => String(product.name || "").trim() === productName) : null;
+}
+
+function bindOrderImageFallbacks() {
+  document.querySelectorAll(".product-link-thumb img").forEach((image) => {
+    const showFallback = () => {
+      image.hidden = true;
+      image.nextElementSibling?.removeAttribute("hidden");
+    };
+    image.addEventListener("error", showFallback, { once: true });
+    if (image.complete && !image.naturalWidth) showFallback();
+  });
 }
 
 function renderGuestMypage() {
@@ -149,6 +180,9 @@ function renderReviewImagePreview(source) {
 function orderCardTemplate(order) {
   const review = mypageStore.getOrderReview(order.id);
   const productName = order.productName || "상품 정보";
+  const catalogProduct = catalogProductForOrder(order);
+  const productId = catalogProduct?.id || order.productId || "";
+  const productImage = catalogProduct?.images?.main?.[0] || catalogProduct?.image || order.image || "";
   const reviewBlock = review ? `
     <div class="order-review-summary">
       <span>${reviewStars(review.rating)}</span>
@@ -159,11 +193,12 @@ function orderCardTemplate(order) {
 
   return `
     <article class="mypage-order-item">
-      <a class="product-link-thumb" href="${productDetailUrl(order.productId || "")}">
-        <img src="${escapeHtml(order.image || "")}" alt="${escapeHtml(productName)} 상품 이미지">
+      <a class="product-link-thumb" href="${productDetailUrl(productId)}">
+        <img src="${escapeHtml(productImage)}" alt="${escapeHtml(productName)} 상품 이미지">
+        <span class="product-image-placeholder" hidden aria-hidden="true">윤슬<br>마켓</span>
       </a>
       <div>
-        <a class="product-link-title" href="${productDetailUrl(order.productId || "")}"><b>${escapeHtml(productName)}</b></a>
+        <a class="product-link-title" href="${productDetailUrl(productId)}"><b>${escapeHtml(productName)}</b></a>
         <small>옵션 · ${escapeHtml(order.option || "기본 옵션")}</small>
         <small>수량 · ${Number(order.quantity || 1)}개 / 주문일 · ${formatOrderDate(order.createdAt)}</small>
         <small>결제 · ${escapeHtml(order.paymentMethod || "-")} / ${mypageWon(order.orderTotal)}</small>
@@ -311,6 +346,7 @@ function renderMypage() {
     ${reviewModalTemplate()}
   `;
 
+  bindOrderImageFallbacks();
   bindWishlistPreviewEvents();
   bindReviewEvents(member, orders);
 }
@@ -461,6 +497,7 @@ document.addEventListener("keydown", (event) => {
 
 async function refreshMemberOrders() {
   const member = mypageStore.getCurrentMember?.();
+  await loadMypageCatalog();
   if (member) await mypageStore.hydrateMemberOrdersFromServer?.(member);
   renderMypage();
 }
