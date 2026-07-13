@@ -1,6 +1,5 @@
-// 관리자 페이지를 열 때마다 반드시 다시 로그인하도록 이전 인증을 폐기합니다.
-sessionStorage.removeItem("yoonseulAdmin");
-let token = null;
+// 서버가 발급한 24시간 관리자 인증을 브라우저에 보관하고 새로고침 후 복원합니다.
+let token = localStorage.getItem("yoonseulAdmin");
 let dashboardData = { requests: [], users: [], inquiries: [], brands: [], categories: [], products: [], stats: { total: 0, active: 0, estimatedRevenue: 0, byStatus: {} } };
 let currentView = "dashboard";
 let productImages = { main: [], detail: [] };
@@ -113,7 +112,8 @@ async function adminApi(url, options = {}) {
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, ...(options.headers || {}) }
   });
   if (response.status === 401) {
-    sessionStorage.removeItem("yoonseulAdmin");
+    localStorage.removeItem("yoonseulAdmin");
+    token = null;
     showLogin();
     throw new Error("관리자 로그인이 필요합니다.");
   }
@@ -148,7 +148,7 @@ document.querySelector("#loginForm").addEventListener("submit", async (event) =>
     return;
   }
   token = result.token;
-  sessionStorage.setItem("yoonseulAdmin", token);
+  localStorage.setItem("yoonseulAdmin", token);
   message.textContent = result.concurrentLogin ? "동시 접속 가능 모드로 로그인되었습니다." : "로그인되었습니다.";
   startAdmin();
 });
@@ -2124,7 +2124,7 @@ document.querySelectorAll(".nav-item").forEach((button) => button.addEventListen
 document.querySelector("#mobileSidebarButton").addEventListener("click", openSidebar);
 document.querySelector("#sidebarOverlay").addEventListener("click", closeSidebar);
 document.querySelector("#logoutButton").addEventListener("click", () => {
-  sessionStorage.removeItem("yoonseulAdmin");
+  localStorage.removeItem("yoonseulAdmin");
   token = null;
   showLogin();
 });
@@ -2155,4 +2155,4 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") closeMemberModal();
 });
 
-showLogin();
+token ? startAdmin().catch(() => showLogin()) : showLogin();
