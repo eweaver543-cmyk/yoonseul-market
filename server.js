@@ -96,7 +96,8 @@ function ensureRuntime() {
           bagFee: 0,
           boxFee: 0,
           destinationSurcharges: {}
-        }
+        },
+        siteSettings: { designBanners: [], inquiryChannels: {}, paymentMethods: {}, promotions: [], reviews: [] }
       };
       fs.writeFileSync(DB_PATH, JSON.stringify(emptyDb, null, 2), "utf8");
     }
@@ -119,6 +120,7 @@ function normalizeDbShape(db) {
   db.wishlists ||= [];
   db.pricing ||= { baseFee: 0, bagFee: 0, boxFee: 0, destinationSurcharges: {} };
   db.pricing.destinationSurcharges ||= {};
+  db.siteSettings ||= { designBanners: [], inquiryChannels: {}, paymentMethods: {}, promotions: [], reviews: [] };
   return db;
 }
 
@@ -625,6 +627,10 @@ async function handleApi(req, res, url) {
     return send(res, 200, db.pricing);
   }
 
+  if (url.pathname === "/api/site-settings" && req.method === "GET") {
+    return send(res, 200, db.siteSettings || {});
+  }
+
   if (url.pathname === "/api/members/register" && req.method === "POST") {
     const body = await readBody(req);
     const email = String(body.email || "").trim().toLowerCase();
@@ -845,6 +851,7 @@ async function handleApi(req, res, url) {
       brands: db.brands,
       categories: db.categories,
       products: db.products,
+      siteSettings: db.siteSettings || {},
       stats: {
         total: db.requests.length,
         active: db.requests.filter((item) => !["배송완료", "취소/반품"].includes(item.status)).length,
@@ -852,6 +859,18 @@ async function handleApi(req, res, url) {
         byStatus
       }
     });
+  }
+
+
+  if (url.pathname === "/api/admin/site-settings" && req.method === "PUT") {
+    const body = await readBody(req);
+    const allowedKeys = ["designBanners", "inquiryChannels", "paymentMethods", "promotions", "reviews"];
+    for (const key of allowedKeys) {
+      if (Object.prototype.hasOwnProperty.call(body, key)) db.siteSettings[key] = body[key];
+    }
+    db.siteSettings.updatedAt = new Date().toISOString();
+    writeDb(db);
+    return send(res, 200, db.siteSettings);
   }
 
   if (url.pathname === "/api/admin/brands" && req.method === "POST") {

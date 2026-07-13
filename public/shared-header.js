@@ -192,6 +192,11 @@ function renderSharedBrandMenus(brands, products) {
 }
 
 async function initSharedHeader() {
+  try {
+    const settingsResponse = await fetch("/api/site-settings", { cache: "no-store" });
+    const settings = await settingsResponse.json();
+    if (settings.inquiryChannels && Object.keys(settings.inquiryChannels).length) localStorage.setItem(SHARED_INQUIRY_CHANNEL_STORAGE_KEY, JSON.stringify(settings.inquiryChannels));
+  } catch (_) {}
   const mobileButton = document.querySelector("#mobileMenu");
   const moreButton = document.querySelector("#moreButton");
   const loginButton = document.querySelector("#memberJoinButton");

@@ -745,9 +745,19 @@ document.querySelector("#noticePopupToday")?.addEventListener("click", () => {
   closeNoticePopup();
 });
 
-renderDesignBanners();
-renderInquiryChannels();
+async function loadServerSiteSettings() {
+  try {
+    const response = await fetch("/api/site-settings", { cache: "no-store" });
+    const settings = await response.json();
+    if (Array.isArray(settings.designBanners) && settings.designBanners.length) localStorage.setItem(DESIGN_STORAGE_KEY, JSON.stringify(settings.designBanners));
+    if (settings.inquiryChannels && Object.keys(settings.inquiryChannels).length) localStorage.setItem(INQUIRY_CHANNEL_STORAGE_KEY, JSON.stringify(settings.inquiryChannels));
+  } catch (_) {}
+  renderDesignBanners();
+  renderInquiryChannels();
+}
+loadServerSiteSettings();
 syncHeaderMemberState();
 updateHeaderScrollShadow();
 loadCatalog().catch(() => showToast("브랜드와 상품 정보를 불러오지 못했습니다."));
 setInterval(() => loadCatalog(true), 10000);
+setInterval(loadServerSiteSettings, 30000);

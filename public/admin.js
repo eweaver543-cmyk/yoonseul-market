@@ -452,6 +452,7 @@ function categoryListTemplate(brandId) {
 }
 
 function getDesignBanners() {
+  if (Array.isArray(dashboardData.siteSettings?.designBanners) && dashboardData.siteSettings.designBanners.length) return dashboardData.siteSettings.designBanners;
   try {
     const saved = JSON.parse(localStorage.getItem(DESIGN_STORAGE_KEY) || "null");
     if (Array.isArray(saved)) return saved;
@@ -464,6 +465,9 @@ function saveDesignBanners(items) {
   const sorted = [...items].sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
   localStorage.setItem(DESIGN_STORAGE_KEY, JSON.stringify(sorted));
   localStorage.setItem("yoonseulDesignUpdated", String(Date.now()));
+  dashboardData.siteSettings ||= {};
+  dashboardData.siteSettings.designBanners = sorted;
+  adminApi("/api/admin/site-settings", { method: "PUT", body: JSON.stringify({ designBanners: sorted }) }).catch(() => showToast("서버 저장에 실패했습니다."));
   if ("BroadcastChannel" in window) {
     const channel = new BroadcastChannel("yoonseul-design");
     channel.postMessage({ type: "design-updated" });
@@ -473,6 +477,8 @@ function saveDesignBanners(items) {
 }
 
 function getInquiryChannels() {
+  const serverSaved = dashboardData.siteSettings?.inquiryChannels;
+  if (serverSaved && Object.keys(serverSaved).length) return { ...DEFAULT_INQUIRY_CHANNELS, ...serverSaved };
   try {
     const saved = JSON.parse(localStorage.getItem(INQUIRY_CHANNEL_STORAGE_KEY) || "null");
     if (saved && typeof saved === "object") {
@@ -492,6 +498,9 @@ function getInquiryChannels() {
 function saveInquiryChannels(channels) {
   localStorage.setItem(INQUIRY_CHANNEL_STORAGE_KEY, JSON.stringify(channels));
   localStorage.setItem("yoonseulInquiryChannelsUpdated", String(Date.now()));
+  dashboardData.siteSettings ||= {};
+  dashboardData.siteSettings.inquiryChannels = channels;
+  adminApi("/api/admin/site-settings", { method: "PUT", body: JSON.stringify({ inquiryChannels: channels }) }).catch(() => showToast("서버 저장에 실패했습니다."));
   if ("BroadcastChannel" in window) {
     const channel = new BroadcastChannel("yoonseul-inquiry-channels");
     channel.postMessage({ type: "inquiry-channels-updated" });
@@ -500,6 +509,8 @@ function saveInquiryChannels(channels) {
 }
 
 function getPaymentMethods() {
+  const serverSaved = dashboardData.siteSettings?.paymentMethods;
+  if (serverSaved && Object.keys(serverSaved).length) return { ...DEFAULT_PAYMENT_METHODS, ...serverSaved };
   try {
     const saved = JSON.parse(localStorage.getItem(PAYMENT_METHOD_STORAGE_KEY) || "null");
     if (saved && typeof saved === "object") {
@@ -524,6 +535,9 @@ function getPaymentMethods() {
 function savePaymentMethods(methods) {
   localStorage.setItem(PAYMENT_METHOD_STORAGE_KEY, JSON.stringify(methods));
   localStorage.setItem("yoonseulPaymentMethodsUpdated", String(Date.now()));
+  dashboardData.siteSettings ||= {};
+  dashboardData.siteSettings.paymentMethods = methods;
+  adminApi("/api/admin/site-settings", { method: "PUT", body: JSON.stringify({ paymentMethods: methods }) }).catch(() => showToast("서버 저장에 실패했습니다."));
   if ("BroadcastChannel" in window) {
     const channel = new BroadcastChannel("yoonseul-payment-methods");
     channel.postMessage({ type: "payment-methods-updated" });
@@ -532,6 +546,7 @@ function savePaymentMethods(methods) {
 }
 
 function getPromotions() {
+  if (Array.isArray(dashboardData.siteSettings?.promotions) && dashboardData.siteSettings.promotions.length) return dashboardData.siteSettings.promotions;
   try {
     const saved = JSON.parse(localStorage.getItem(PROMOTION_STORAGE_KEY) || "null");
     if (Array.isArray(saved)) return saved;
@@ -544,6 +559,9 @@ function savePromotions(items) {
   const next = [...items].sort((a, b) => String(b.startAt || "").localeCompare(String(a.startAt || "")));
   localStorage.setItem(PROMOTION_STORAGE_KEY, JSON.stringify(next));
   localStorage.setItem("yoonseulPromotionsUpdated", String(Date.now()));
+  dashboardData.siteSettings ||= {};
+  dashboardData.siteSettings.promotions = next;
+  adminApi("/api/admin/site-settings", { method: "PUT", body: JSON.stringify({ promotions: next }) }).catch(() => showToast("서버 저장에 실패했습니다."));
   return next;
 }
 
@@ -1104,6 +1122,7 @@ function emptyTemplate(view, label) {
 }
 
 function getAdminReviews() {
+  if (Array.isArray(dashboardData.siteSettings?.reviews)) return dashboardData.siteSettings.reviews;
   try {
     const saved = JSON.parse(localStorage.getItem(REVIEW_STORAGE_KEY) || "[]");
     return Array.isArray(saved) ? saved : [];
@@ -1115,6 +1134,9 @@ function getAdminReviews() {
 function saveAdminReviews(items) {
   localStorage.setItem(REVIEW_STORAGE_KEY, JSON.stringify(items));
   localStorage.setItem(REVIEW_UPDATED_KEY, String(Date.now()));
+  dashboardData.siteSettings ||= {};
+  dashboardData.siteSettings.reviews = items;
+  adminApi("/api/admin/site-settings", { method: "PUT", body: JSON.stringify({ reviews: items }) }).catch(() => showToast("서버 저장에 실패했습니다."));
   if ("BroadcastChannel" in window) {
     const channel = new BroadcastChannel("yoonseul-reviews");
     channel.postMessage({ type: "reviews-updated" });

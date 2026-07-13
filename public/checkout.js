@@ -370,7 +370,9 @@ document.querySelector("#checkoutForm")?.addEventListener("submit", async (event
   }
 });
 
-loadCheckout().catch(() => {
+fetch("/api/site-settings", { cache: "no-store" }).then((response) => response.json()).then((settings) => {
+  if (settings.paymentMethods && Object.keys(settings.paymentMethods).length) localStorage.setItem(PAYMENT_METHOD_STORAGE_KEY, JSON.stringify(settings.paymentMethods));
+}).catch(() => {}).finally(() => loadCheckout().catch(() => {
   document.querySelector("#checkoutApp").innerHTML = `
     <section class="form-section">
       <div class="section-head">
@@ -380,6 +382,6 @@ loadCheckout().catch(() => {
       <a class="back-link" href="/">메인으로 돌아가기</a>
     </section>
   `;
-});
+}));
 
 subscribePaymentMethods();
