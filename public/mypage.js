@@ -241,31 +241,31 @@ function renderMypage() {
     </section>
 
     <section class="summary-grid">
-      <article class="summary-card">
+      <a class="summary-card" href="#recent-orders" aria-label="최근 주문 내역으로 이동">
         <small>누적 주문</small>
         <strong>${orders.length}</strong>
         <span>완료/진행중 주문을 포함한 전체 주문 수</span>
-      </article>
-      <article class="summary-card">
+      </a>
+      <a class="summary-card" href="/cart.html" aria-label="장바구니 페이지로 이동">
         <small>장바구니 상품</small>
         <strong>${cartItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0)}</strong>
         <span>현재 담아둔 상품 수량 기준</span>
-      </article>
-      <article class="summary-card">
+      </a>
+      <a class="summary-card" href="#recent-orders" aria-label="구매 주문 내역으로 이동">
         <small>총 구매금액</small>
         <strong>${mypageWon(totalSpent)}</strong>
         <span>취소 제외 기준으로 계산된 누적 결제 금액</span>
-      </article>
-      <article class="summary-card">
+      </a>
+      <a class="summary-card" href="#recent-orders" aria-label="작성한 리뷰가 있는 주문 내역으로 이동">
         <small>작성한 리뷰</small>
         <strong>${reviews.length}</strong>
         <span>구매 상품 기준으로 남긴 리뷰 수</span>
-      </article>
-      <article class="summary-card">
+      </a>
+      <a class="summary-card" href="#wishlist-preview" aria-label="관심상품 목록으로 이동">
         <small>관심상품</small>
         <strong>${wishlistItems.length}</strong>
         <span>찜해둔 상품을 마이페이지에서 빠르게 확인합니다.</span>
-      </article>
+      </a>
     </section>
 
     <section class="mypage-grid">
@@ -281,7 +281,7 @@ function renderMypage() {
       </article>
 
       <div>
-        <section class="content-card">
+        <section class="content-card" id="recent-orders">
           <div class="content-card-head">
             <div>
               <h2>최근 주문 내역</h2>
@@ -295,7 +295,7 @@ function renderMypage() {
           </div>
         </section>
 
-        <section class="content-card">
+        <section class="content-card" id="cart-preview">
           <div class="content-card-head">
             <div>
               <h2>장바구니 미리보기</h2>
@@ -318,7 +318,7 @@ function renderMypage() {
           </div>
         </section>
 
-        <section class="content-card">
+        <section class="content-card" id="wishlist-preview">
           <div class="content-card-head">
             <div>
               <h2>관심상품 미리보기</h2>

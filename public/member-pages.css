@@ -74,12 +74,38 @@
 }
 
 .summary-card{
+  position:relative;
+  display:block;
   padding:22px;
   border:1px solid #E7E0D5;
   border-radius:10px;
   background:#fff;
   box-shadow:0 8px 24px rgba(91,74,48,.05);
+  color:inherit;
+  text-decoration:none;
+  cursor:pointer;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
 }
+
+.summary-card::after{
+  content:"→";
+  position:absolute;
+  top:18px;
+  right:20px;
+  color:#B18A48;
+  font-size:16px;
+  opacity:.72;
+}
+
+.summary-card:hover,
+.summary-card:focus-visible{
+  transform:translateY(-3px);
+  border-color:#CDAE78;
+  box-shadow:0 14px 30px rgba(91,74,48,.12);
+  outline:none;
+}
+
+#recent-orders,#cart-preview,#wishlist-preview{scroll-margin-top:110px}
 
 .summary-card small{
   display:block;
