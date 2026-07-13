@@ -10,6 +10,8 @@ let catalogSignature = "";
 let salesRankings = { realtime: [], weekly: [], monthly: [] };
 let rankingPeriods = { realtime: "최근 24시간", weekly: "최근 7일", monthly: "최근 30일" };
 let promotions = [];
+let randomBestProductIds = [];
+let randomBestSignature = "";
 const DESIGN_STORAGE_KEY = "yoonseulDesignBanners";
 const MEMBER_STORAGE_KEY = "yoonseulCurrentMember";
 const INQUIRY_CHANNEL_STORAGE_KEY = "yoonseulInquiryChannels";
@@ -202,16 +204,37 @@ function bindCardActions() {
   });
 }
 
+function randomBestProducts() {
+  const candidates = products.filter((product) => hasProductDisplayImage(product) && !["삭제", "판매중지"].includes(String(product.status || "")));
+  const signature = candidates.map((product) => Number(product.id)).sort((a, b) => a - b).join(",");
+  if (signature !== randomBestSignature) {
+    randomBestSignature = signature;
+    randomBestProductIds = candidates.map((product) => Number(product.id));
+    for (let index = randomBestProductIds.length - 1; index > 0; index -= 1) {
+      const target = Math.floor(Math.random() * (index + 1));
+      [randomBestProductIds[index], randomBestProductIds[target]] = [randomBestProductIds[target], randomBestProductIds[index]];
+    }
+  }
+  return randomBestProductIds.slice(0, 8)
+    .map((id) => products.find((product) => Number(product.id) === id))
+    .filter(Boolean);
+}
+
 function renderBest(type = activeRank) {
   activeRank = type;
   const ranking = Array.isArray(salesRankings[type]) ? salesRankings[type] : [];
   const ranked = ranking.map((sales) => ({ sales, product: products.find((product) => Number(product.id) === Number(sales.productId)) }))
     .filter((entry) => entry.product && hasProductDisplayImage(entry.product));
+  const fallbackProducts = ranked.length ? [] : randomBestProducts();
   const description = document.querySelector("#bestPeriodDescription");
-  if (description) description.textContent = `${rankingPeriods[type] || "선택 기간"} 판매 수량 기준 · 10초마다 갱신`;
+  if (description) description.textContent = ranked.length
+    ? `${rankingPeriods[type] || "선택 기간"} 판매 수량 기준 · 10초마다 갱신`
+    : "판매 데이터가 쌓이는 동안 판매 상품을 랜덤으로 보여드립니다.";
   document.querySelector("#bestGrid").innerHTML = ranked.length
     ? ranked.map((entry, index) => cardTemplate(entry.product, index + 1, entry.sales)).join("")
-    : `<div class="best-empty-state"><strong>아직 ${rankingPeriods[type] || "선택 기간"} 판매 데이터가 없습니다.</strong><span>결제가 확인된 주문부터 베스트 순위에 자동 반영됩니다.</span></div>`;
+    : fallbackProducts.length
+      ? fallbackProducts.map((product) => cardTemplate(product)).join("")
+      : `<div class="best-empty-state"><strong>현재 노출할 판매 상품이 없습니다.</strong><span>관리자에서 판매 상품과 대표 이미지를 등록해 주세요.</span></div>`;
   bindCardActions();
 }
 
