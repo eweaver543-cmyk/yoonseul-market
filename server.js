@@ -117,6 +117,8 @@ function normalizeDbShape(db) {
   db.pricing ||= { baseFee: 0, bagFee: 0, boxFee: 0, destinationSurcharges: {} };
   db.pricing.destinationSurcharges ||= {};
   db.siteSettings ||= { designBanners: [], inquiryChannels: {}, paymentMethods: {}, promotions: [], reviews: [] };
+  db.siteSettings.designBanners = (Array.isArray(db.siteSettings.designBanners) ? db.siteSettings.designBanners : [])
+    .map((item) => ({ ...item, active: parseBoolean(item.active, false) }));
   return db;
 }
 
@@ -940,7 +942,10 @@ async function handleApi(req, res, url) {
     const body = await readBody(req);
     const allowedKeys = ["designBanners", "inquiryChannels", "paymentMethods", "promotions", "reviews"];
     for (const key of allowedKeys) {
-      if (Object.prototype.hasOwnProperty.call(body, key)) db.siteSettings[key] = body[key];
+      if (!Object.prototype.hasOwnProperty.call(body, key)) continue;
+      db.siteSettings[key] = key === "designBanners"
+        ? (Array.isArray(body[key]) ? body[key] : []).map((item) => ({ ...item, active: parseBoolean(item.active, false) }))
+        : body[key];
     }
     db.siteSettings.updatedAt = new Date().toISOString();
     writeDb(db);

@@ -478,29 +478,38 @@ function categoryListTemplate(brandId) {
     <div class="category-chip-grid">${items.map((item) => `<article><span><small>#${item.id}</small><b>${item.name}</b></span><div><button class="manager-edit-category" data-category="${item.id}"><i class="fa-solid fa-pen"></i> 수정</button><button class="manager-delete-category danger" data-category="${item.id}"><i class="fa-regular fa-trash-can"></i> 삭제</button></div></article>`).join("")}</div>`;
 }
 
+function isDesignBannerActive(item) {
+  return item?.active === true || item?.active === 1 || item?.active === "true" || item?.active === "1";
+}
+
+function normalizeDesignBanners(items) {
+  return (Array.isArray(items) ? items : []).map((item) => ({ ...item, active: isDesignBannerActive(item) }));
+}
+
 function getDesignBanners() {
-  if (Array.isArray(dashboardData.siteSettings?.designBanners) && dashboardData.siteSettings.designBanners.length) return dashboardData.siteSettings.designBanners;
+  if (Array.isArray(dashboardData.siteSettings?.designBanners)) return normalizeDesignBanners(dashboardData.siteSettings.designBanners);
   try {
     const saved = JSON.parse(localStorage.getItem(DESIGN_STORAGE_KEY) || "null");
-    if (Array.isArray(saved)) return saved;
+    if (Array.isArray(saved)) return normalizeDesignBanners(saved);
   } catch (_) {}
   localStorage.setItem(DESIGN_STORAGE_KEY, JSON.stringify(DEFAULT_DESIGN_BANNERS));
   return [...DEFAULT_DESIGN_BANNERS];
 }
 
-function saveDesignBanners(items) {
-  const sorted = [...items].sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
-  localStorage.setItem(DESIGN_STORAGE_KEY, JSON.stringify(sorted));
+async function saveDesignBanners(items) {
+  const sorted = normalizeDesignBanners(items).sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+  const saved = await adminApi("/api/admin/site-settings", { method: "PUT", body: JSON.stringify({ designBanners: sorted }) });
+  const serverItems = normalizeDesignBanners(saved.designBanners);
+  localStorage.setItem(DESIGN_STORAGE_KEY, JSON.stringify(serverItems));
   localStorage.setItem("yoonseulDesignUpdated", String(Date.now()));
   dashboardData.siteSettings ||= {};
-  dashboardData.siteSettings.designBanners = sorted;
-  adminApi("/api/admin/site-settings", { method: "PUT", body: JSON.stringify({ designBanners: sorted }) }).catch(() => showToast("서버 저장에 실패했습니다."));
+  dashboardData.siteSettings.designBanners = serverItems;
   if ("BroadcastChannel" in window) {
     const channel = new BroadcastChannel("yoonseul-design");
     channel.postMessage({ type: "design-updated" });
     channel.close();
   }
-  return sorted;
+  return serverItems;
 }
 
 function getInquiryChannels() {
@@ -596,18 +605,18 @@ function designBannerRowsTemplate(items = getDesignBanners()) {
   if (!items.length) {
     return `<tr><td colspan="5" class="design-empty-cell">등록된 배너/팝업이 없습니다. 새 공지를 등록해 주세요.</td></tr>`;
   }
-  return items.map((item) => `<tr>
+  return items.map((item) => { const active = isDesignBannerActive(item); return `<tr>
     <td><span class="design-position-badge ${item.position}">${DESIGN_POSITION_LABELS[item.position] || item.position}</span></td>
     <td><strong>${safeHtml(item.title)}</strong><small>${safeHtml(item.content).slice(0, 96)}${item.content.length > 96 ? "..." : ""}</small></td>
-    <td><span class="design-active-badge ${item.active ? "on" : ""}">${item.active ? "노출중" : "비활성"}</span></td>
+    <td><span class="design-active-badge ${active ? "on" : ""}">${active ? "노출중" : "비활성"}</span><button type="button" class="table-action toggle-design" data-design="${item.id}">${active ? "비활성화" : "노출하기"}</button></td>
     <td>${dateText(item.updatedAt || new Date())}</td>
     <td><button type="button" class="table-action edit-design" data-design="${item.id}">수정</button><button type="button" class="table-action danger delete-design" data-design="${item.id}">삭제</button></td>
-  </tr>`).join("");
+  </tr>`; }).join("");
 }
 
 function designTemplate() {
   const items = getDesignBanners();
-  const activeCount = items.filter((item) => item.active).length;
+  const activeCount = items.filter(isDesignBannerActive).length;
   return `<div class="view-heading">
       <div><p>DESIGN / BANNER MANAGEMENT</p><h2>디자인/배너 관리</h2></div>
       <button id="resetDesignDefaults"><i class="fa-solid fa-rotate-left"></i> 기본 공지 복구</button>
@@ -658,7 +667,7 @@ function resetDesignForm() {
   document.querySelector("#designSubmitButton").textContent = "배너/팝업 저장";
 }
 
-function saveDesignBanner(event) {
+async function saveDesignBanner(event) {
   event.preventDefault();
   const form = event.currentTarget;
   const data = Object.fromEntries(new FormData(form));
@@ -676,9 +685,13 @@ function saveDesignBanner(event) {
   const index = items.findIndex((item) => item.id === id);
   if (index >= 0) items[index] = nextItem;
   else items.unshift(nextItem);
-  saveDesignBanners(items);
-  switchView("design");
-  showToast(index >= 0 ? "배너/팝업이 수정되었습니다." : "새 배너/팝업이 등록되었습니다.");
+  try {
+    await saveDesignBanners(items);
+    switchView("design");
+    showToast(index >= 0 ? "배너/팝업이 수정되어 홈페이지에 반영되었습니다." : "새 배너/팝업이 홈페이지에 등록되었습니다.");
+  } catch (_) {
+    showToast("서버 저장에 실패했습니다. 다시 시도해 주세요.");
+  }
 }
 
 function editDesignBanner(id) {
@@ -689,25 +702,48 @@ function editDesignBanner(id) {
   form.elements.position.value = item.position;
   form.elements.title.value = item.title;
   form.elements.content.value = item.content;
-  form.elements.active.checked = Boolean(item.active);
+  form.elements.active.checked = isDesignBannerActive(item);
   document.querySelector("#designSubmitButton").textContent = "수정 내용 저장";
   form.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-function deleteDesignBanner(id) {
+async function deleteDesignBanner(id) {
   const item = getDesignBanners().find((entry) => entry.id === id);
   if (!item) return;
   if (!confirm(`"${item.title}" 항목을 삭제할까요?`)) return;
-  saveDesignBanners(getDesignBanners().filter((entry) => entry.id !== id));
-  switchView("design");
-  showToast("배너/팝업이 삭제되었습니다.");
+  try {
+    await saveDesignBanners(getDesignBanners().filter((entry) => entry.id !== id));
+    switchView("design");
+    showToast("배너/팝업이 삭제되어 홈페이지에서 제거되었습니다.");
+  } catch (_) {
+    showToast("서버 삭제에 실패했습니다. 다시 시도해 주세요.");
+  }
 }
 
-function resetDesignDefaults() {
+async function resetDesignDefaults() {
   if (!confirm("기본 세관 통관 공지로 다시 복구할까요? 기존 배너/팝업 목록은 초기화됩니다.")) return;
-  saveDesignBanners(DEFAULT_DESIGN_BANNERS);
-  switchView("design");
-  showToast("기본 공지가 복구되어 홈페이지에 반영되었습니다.");
+  try {
+    await saveDesignBanners(DEFAULT_DESIGN_BANNERS);
+    switchView("design");
+    showToast("기본 공지가 복구되어 홈페이지에 반영되었습니다.");
+  } catch (_) {
+    showToast("서버 저장에 실패했습니다. 다시 시도해 주세요.");
+  }
+}
+
+async function toggleDesignBanner(id) {
+  const items = getDesignBanners();
+  const item = items.find((entry) => entry.id === id);
+  if (!item) return;
+  item.active = !isDesignBannerActive(item);
+  item.updatedAt = new Date().toISOString();
+  try {
+    await saveDesignBanners(items);
+    switchView("design");
+    showToast(item.active ? "배너가 노출중으로 변경되었습니다." : "배너가 비활성화되어 홈페이지에서 숨겨졌습니다.");
+  } catch (_) {
+    showToast("상태 저장에 실패했습니다. 다시 시도해 주세요.");
+  }
 }
 
 function inquiriesTemplate() {
@@ -1453,6 +1489,7 @@ function bindDynamicEvents() {
   document.querySelector("#cancelDesignEdit")?.addEventListener("click", resetDesignForm);
   document.querySelector("#resetDesignDefaults")?.addEventListener("click", resetDesignDefaults);
   document.querySelectorAll(".edit-design").forEach((button) => button.addEventListener("click", () => editDesignBanner(button.dataset.design)));
+  document.querySelectorAll(".toggle-design").forEach((button) => button.addEventListener("click", () => toggleDesignBanner(button.dataset.design)));
   document.querySelectorAll(".delete-design").forEach((button) => button.addEventListener("click", () => deleteDesignBanner(button.dataset.design)));
   document.querySelector("#inquiryChannelsForm")?.addEventListener("submit", saveInquiryChannelsForm);
   document.querySelector("#saveInquiryChannelsTop")?.addEventListener("click", () => document.querySelector("#inquiryChannelsForm")?.requestSubmit());

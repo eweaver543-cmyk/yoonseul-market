@@ -379,10 +379,18 @@ function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[character]));
 }
 
+function isDesignBannerActive(item) {
+  return item?.active === true || item?.active === 1 || item?.active === "true" || item?.active === "1";
+}
+
+function normalizeDesignBanners(items) {
+  return (Array.isArray(items) ? items : []).map((item) => ({ ...item, active: isDesignBannerActive(item) }));
+}
+
 function getDesignBanners() {
   try {
     const saved = JSON.parse(localStorage.getItem(DESIGN_STORAGE_KEY) || "null");
-    if (Array.isArray(saved)) return saved;
+    if (Array.isArray(saved)) return normalizeDesignBanners(saved);
   } catch (_) {}
   localStorage.setItem(DESIGN_STORAGE_KEY, JSON.stringify(DEFAULT_DESIGN_BANNERS));
   return [...DEFAULT_DESIGN_BANNERS];
@@ -436,7 +444,7 @@ function openNoticePopup(item) {
 }
 
 function renderDesignBanners() {
-  const activeItems = getDesignBanners().filter((item) => item.active);
+  const activeItems = getDesignBanners().filter(isDesignBannerActive);
   const topItems = activeItems.filter((item) => item.position === "top");
   const bottomItems = activeItems.filter((item) => item.position === "bottom");
   const popupItem = activeItems.find((item) => item.position === "popup");
@@ -740,7 +748,7 @@ document.querySelector("#noticePopup")?.addEventListener("click", (event) => {
   if (event.target === event.currentTarget) closeNoticePopup();
 });
 document.querySelector("#noticePopupToday")?.addEventListener("click", () => {
-  const popupItem = getDesignBanners().filter((item) => item.active).find((item) => item.position === "popup");
+  const popupItem = getDesignBanners().filter(isDesignBannerActive).find((item) => item.position === "popup");
   if (popupItem) localStorage.setItem(`yoonseulNoticeHidden:${popupItem.id}`, todayKey());
   closeNoticePopup();
 });
@@ -749,7 +757,7 @@ async function loadServerSiteSettings() {
   try {
     const response = await fetch("/api/site-settings", { cache: "no-store" });
     const settings = await response.json();
-    if (Array.isArray(settings.designBanners) && settings.designBanners.length) localStorage.setItem(DESIGN_STORAGE_KEY, JSON.stringify(settings.designBanners));
+    if (Array.isArray(settings.designBanners)) localStorage.setItem(DESIGN_STORAGE_KEY, JSON.stringify(normalizeDesignBanners(settings.designBanners)));
     if (settings.inquiryChannels && Object.keys(settings.inquiryChannels).length) localStorage.setItem(INQUIRY_CHANNEL_STORAGE_KEY, JSON.stringify(settings.inquiryChannels));
   } catch (_) {}
   renderDesignBanners();
@@ -760,4 +768,4 @@ syncHeaderMemberState();
 updateHeaderScrollShadow();
 loadCatalog().catch(() => showToast("브랜드와 상품 정보를 불러오지 못했습니다."));
 setInterval(() => loadCatalog(true), 10000);
-setInterval(loadServerSiteSettings, 30000);
+setInterval(loadServerSiteSettings, 10000);
