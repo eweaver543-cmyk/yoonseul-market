@@ -311,6 +311,34 @@
     });
   }
 
+  async function hydrateMemberOrdersFromServer(member = getCurrentMember()) {
+    if (!member?.id || !member?.email) return getMemberOrders(member);
+    try {
+      const params = new URLSearchParams({ userId: member.id, email: member.email });
+      const response = await fetch(`/api/member/orders?${params.toString()}`, { cache: "no-store" });
+      if (!response.ok) return getMemberOrders(member);
+      const payload = await response.json();
+      const serverOrders = Array.isArray(payload.orders) ? payload.orders : [];
+      const localOrders = getOrderHistory();
+      const localById = new Map(localOrders.map((order) => [String(order.id), order]));
+      const memberOrderIds = new Set(serverOrders.map((order) => String(order.id)));
+      const mergedMemberOrders = serverOrders.map((order) => ({
+        ...(localById.get(String(order.id)) || {}),
+        ...order,
+        orderTotal: Number(order.orderTotal || localById.get(String(order.id))?.orderTotal || 0),
+        image: order.image || localById.get(String(order.id))?.image || ""
+      }));
+      const unrelatedOrders = localOrders.filter((order) => {
+        const belongsToMember = (member.id && order.userId === member.id) || (member.email && order.email === member.email);
+        return !belongsToMember && !memberOrderIds.has(String(order.id));
+      });
+      saveOrderHistory([...mergedMemberOrders, ...unrelatedOrders]);
+      return mergedMemberOrders;
+    } catch (_) {
+      return getMemberOrders(member);
+    }
+  }
+
   function consumeCartItem(id) {
     const items = getCart().filter((item) => item.id !== id);
     return saveCart(items);
@@ -429,6 +457,7 @@
     saveOrderHistory,
     addOrderHistory,
     getMemberOrders,
+    hydrateMemberOrdersFromServer,
     consumeCartItem,
     getReviews,
     saveReviews,

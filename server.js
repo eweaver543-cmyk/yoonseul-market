@@ -612,6 +612,37 @@ async function handleApi(req, res, url) {
     return send(res, 200, db.siteSettings || {});
   }
 
+  if (url.pathname === "/api/member/orders" && req.method === "GET") {
+    const userId = String(url.searchParams.get("userId") || "").trim();
+    const email = String(url.searchParams.get("email") || "").trim().toLowerCase();
+    if (!userId || !email) return sendError(res, 400, "회원 주문 조회 정보가 필요합니다.");
+
+    const member = db.users.find((user) =>
+      String(user.id || "") === userId && String(user.email || "").trim().toLowerCase() === email
+    );
+    if (!member) return sendError(res, 404, "회원 정보를 찾을 수 없습니다.");
+
+    const orders = db.requests
+      .filter((order) => String(order.userId || "") === userId && String(order.email || "").trim().toLowerCase() === email)
+      .map((order) => ({
+        id: order.id,
+        userId: order.userId,
+        email: order.email,
+        productId: Number(order.productId || 0),
+        productName: order.productName || order.itemType || "상품 정보",
+        brandName: order.brandName || "",
+        option: order.option || "기본 옵션",
+        quantity: Math.max(1, Number(order.quantity || order.boxCount || 1)),
+        orderTotal: Number(order.confirmedPrice || order.estimatedPrice || 0),
+        paymentMethod: order.paymentMethod || "",
+        status: order.status || "입금대기",
+        createdAt: order.createdAt,
+        updatedAt: order.updatedAt || order.createdAt,
+        image: order.image || ""
+      }));
+    return send(res, 200, { orders });
+  }
+
   if (url.pathname === "/api/members/register" && req.method === "POST") {
     const body = await readBody(req);
     const email = String(body.email || "").trim().toLowerCase();
@@ -685,8 +716,12 @@ async function handleApi(req, res, url) {
       bagCount: Number(body.bagCount || 0),
       boxCount: Number(body.boxCount || 0),
       itemType: String(body.itemType || "").trim(),
+      productId: Number(body.productId || 0),
       productName: String(body.productName || "").trim(),
+      brandName: String(body.brandName || "").trim(),
       option: String(body.option || "").trim(),
+      quantity: Math.max(1, Number(body.quantity || body.boxCount || 1)),
+      image: String(body.image || "").trim(),
       email: String(body.email || "").trim(),
       postcode: String(body.postcode || "").trim(),
       paymentMethod: String(body.paymentMethod || "무통장입금").trim(),

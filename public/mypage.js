@@ -459,4 +459,11 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") closeReviewModal();
 });
 
-renderMypage();
+async function refreshMemberOrders() {
+  const member = mypageStore.getCurrentMember?.();
+  if (member) await mypageStore.hydrateMemberOrdersFromServer?.(member);
+  renderMypage();
+}
+
+refreshMemberOrders();
+setInterval(refreshMemberOrders, 15000);
