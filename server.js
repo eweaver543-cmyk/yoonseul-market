@@ -586,6 +586,51 @@ function parseBoolean(value, fallback = false) {
   return String(value).toLowerCase() === "true";
 }
 
+function normalizeSalesProductName(value) {
+  return String(value || "").toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+}
+
+function resolveSalesProductId(order, products) {
+  const directId = Number(order.productId || 0);
+  if (directId && products.some((product) => Number(product.id) === directId)) return directId;
+  const orderName = normalizeSalesProductName(order.productName || order.itemType);
+  if (!orderName) return 0;
+  return Number(products.find((product) => normalizeSalesProductName(product.name) === orderName)?.id || 0);
+}
+
+function calculateBestSellerRankings(requests, products, now = Date.now()) {
+  const windows = {
+    realtime: 24 * 60 * 60 * 1000,
+    weekly: 7 * 24 * 60 * 60 * 1000,
+    monthly: 30 * 24 * 60 * 60 * 1000
+  };
+  const countedStatuses = new Set(["입금완료", "결제완료", "배송준비중", "배송중", "배송완료"]);
+  const activeProducts = products.filter((product) => !["삭제", "판매중지"].includes(String(product.status || "")));
+  const counters = Object.fromEntries(Object.keys(windows).map((key) => [key, new Map()]));
+
+  for (const order of requests) {
+    if (!countedStatuses.has(String(order.status || ""))) continue;
+    const soldAt = Date.parse(order.createdAt || "");
+    if (!Number.isFinite(soldAt) || soldAt > now) continue;
+    const productId = resolveSalesProductId(order, activeProducts);
+    if (!productId) continue;
+    const quantity = Math.max(1, Number(order.quantity || order.boxCount || 1));
+
+    for (const [period, duration] of Object.entries(windows)) {
+      if (now - soldAt > duration) continue;
+      const current = counters[period].get(productId) || { productId, units: 0, orderCount: 0, lastSoldAt: "" };
+      current.units += quantity;
+      current.orderCount += 1;
+      if (!current.lastSoldAt || soldAt > Date.parse(current.lastSoldAt)) current.lastSoldAt = new Date(soldAt).toISOString();
+      counters[period].set(productId, current);
+    }
+  }
+
+  return Object.fromEntries(Object.entries(counters).map(([period, counter]) => [period, [...counter.values()]
+    .sort((a, b) => b.units - a.units || b.orderCount - a.orderCount || Date.parse(b.lastSoldAt) - Date.parse(a.lastSoldAt) || a.productId - b.productId)
+    .slice(0, 8)]));
+}
+
 async function handleApi(req, res, url) {
   const db = readDb();
 
@@ -603,6 +648,14 @@ async function handleApi(req, res, url) {
       brands: [...db.brands].sort((a, b) => Number(a.order || 0) - Number(b.order || 0)),
       categories: db.categories,
       products: db.products.filter((product) => product.status !== "삭제")
+    });
+  }
+
+  if (url.pathname === "/api/best-sellers" && req.method === "GET") {
+    return send(res, 200, {
+      generatedAt: new Date().toISOString(),
+      periods: { realtime: "최근 24시간", weekly: "최근 7일", monthly: "최근 30일" },
+      rankings: calculateBestSellerRankings(db.requests, db.products)
     });
   }
 

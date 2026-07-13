@@ -7,6 +7,8 @@ let initialBrandId = Number(new URLSearchParams(location.search).get("brand") ||
 let query = "";
 let activeRank = "realtime";
 let catalogSignature = "";
+let salesRankings = { realtime: [], weekly: [], monthly: [] };
+let rankingPeriods = { realtime: "최근 24시간", weekly: "최근 7일", monthly: "최근 30일" };
 const DESIGN_STORAGE_KEY = "yoonseulDesignBanners";
 const MEMBER_STORAGE_KEY = "yoonseulCurrentMember";
 const INQUIRY_CHANNEL_STORAGE_KEY = "yoonseulInquiryChannels";
@@ -177,11 +179,11 @@ function syncHeaderMemberState() {
   }
 }
 
-function cardTemplate(product, rank) {
+function cardTemplate(product, rank, sales) {
   const brand = brandOf(product);
   return `<article class="product-card" data-product="${product.id}">
     <div class="product-image"><img src="${productPrimaryImage(product)}" alt="${product.name}" loading="lazy" onerror="this.onerror=null;this.src='${PRODUCT_PLACEHOLDER_IMAGE}'">${rank ? `<span class="rank-number">${rank}</span>` : ""}<button class="heart-button" data-wishlist="${product.id}" aria-label="${product.name} 찜하기">♡</button></div>
-    <div class="card-info"><small>${brand.enName}</small><h3>${product.name}</h3><strong>${won(product.price)}</strong><del>${won(product.oldPrice)}</del><button class="add-button" data-cart="${product.id}">장바구니 담기</button></div>
+    <div class="card-info"><small>${brand.enName}</small><h3>${product.name}</h3>${sales ? `<span class="sales-count">판매 ${Number(sales.units || 0).toLocaleString("ko-KR")}개 · 주문 ${Number(sales.orderCount || 0).toLocaleString("ko-KR")}건</span>` : ""}<strong>${won(product.price)}</strong><del>${won(product.oldPrice)}</del><button class="add-button" data-cart="${product.id}">장바구니 담기</button></div>
   </article>`;
 }
 
@@ -201,9 +203,24 @@ function bindCardActions() {
 
 function renderBest(type = activeRank) {
   activeRank = type;
-  const ranked = [...products].filter(hasProductDisplayImage).sort((a, b) => Number(b.score?.[type] || 0) - Number(a.score?.[type] || 0)).slice(0, 8);
-  document.querySelector("#bestGrid").innerHTML = ranked.map((product, index) => cardTemplate(product, index + 1)).join("");
+  const ranking = Array.isArray(salesRankings[type]) ? salesRankings[type] : [];
+  const ranked = ranking.map((sales) => ({ sales, product: products.find((product) => Number(product.id) === Number(sales.productId)) }))
+    .filter((entry) => entry.product && hasProductDisplayImage(entry.product));
+  const description = document.querySelector("#bestPeriodDescription");
+  if (description) description.textContent = `${rankingPeriods[type] || "선택 기간"} 판매 수량 기준 · 10초마다 갱신`;
+  document.querySelector("#bestGrid").innerHTML = ranked.length
+    ? ranked.map((entry, index) => cardTemplate(entry.product, index + 1, entry.sales)).join("")
+    : `<div class="best-empty-state"><strong>아직 ${rankingPeriods[type] || "선택 기간"} 판매 데이터가 없습니다.</strong><span>결제가 확인된 주문부터 베스트 순위에 자동 반영됩니다.</span></div>`;
   bindCardActions();
+}
+
+async function loadBestSellers() {
+  const response = await fetch("/api/best-sellers", { cache: "no-store" });
+  if (!response.ok) throw new Error("BEST_SELLERS_FAILED");
+  const data = await response.json();
+  salesRankings = data.rankings || salesRankings;
+  rankingPeriods = data.periods || rankingPeriods;
+  renderBest(activeRank);
 }
 
 function filteredProducts() {
@@ -766,6 +783,7 @@ async function loadServerSiteSettings() {
 loadServerSiteSettings();
 syncHeaderMemberState();
 updateHeaderScrollShadow();
-loadCatalog().catch(() => showToast("브랜드와 상품 정보를 불러오지 못했습니다."));
+Promise.all([loadCatalog(), loadBestSellers()]).catch(() => showToast("상품 또는 판매 순위를 불러오지 못했습니다."));
 setInterval(() => loadCatalog(true), 10000);
+setInterval(() => loadBestSellers().catch(() => {}), 10000);
 setInterval(loadServerSiteSettings, 10000);
