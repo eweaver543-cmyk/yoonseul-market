@@ -19,10 +19,6 @@ const MAX_UPLOAD_MB = Number(process.env.MAX_UPLOAD_MB || 50);
 const MAX_UPLOAD_SIZE = Math.max(5, MAX_UPLOAD_MB) * 1024 * 1024;
 const IMAGE_MAX_WIDTH = Number(process.env.IMAGE_MAX_WIDTH || 1800);
 const IMAGE_WEBP_QUALITY = Number(process.env.IMAGE_WEBP_QUALITY || 82);
-const ADMIN_LOGIN_WINDOW_MS = 15 * 60 * 1000;
-const ADMIN_LOGIN_MAX_ATTEMPTS = 5;
-const adminLoginAttempts = new Map();
-
 if (!ADMIN_EMAIL || !ADMIN_PASSWORD || ADMIN_SESSION_SECRET.length < 32) {
   throw new Error("ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_SESSION_SECRET(32자 이상) 환경변수를 설정해 주세요.");
 }
@@ -247,25 +243,10 @@ function isAdmin(req) {
   return verifyAdminToken(token);
 }
 
-function requestIp(req) {
-  return String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown").split(",")[0].trim();
-}
-
 function secureTextEqual(left, right) {
   const leftHash = crypto.createHash("sha256").update(String(left)).digest();
   const rightHash = crypto.createHash("sha256").update(String(right)).digest();
   return crypto.timingSafeEqual(leftHash, rightHash);
-}
-
-function loginAttemptState(ip) {
-  const now = Date.now();
-  const state = adminLoginAttempts.get(ip);
-  if (!state || now - state.startedAt >= ADMIN_LOGIN_WINDOW_MS) {
-    const fresh = { count: 0, startedAt: now };
-    adminLoginAttempts.set(ip, fresh);
-    return fresh;
-  }
-  return state;
 }
 
 function calculatePrice(body, pricing) {
@@ -780,19 +761,12 @@ async function handleApi(req, res, url) {
   }
 
   if (url.pathname === "/api/admin/login" && req.method === "POST") {
-    const ip = requestIp(req);
-    const attempts = loginAttemptState(ip);
-    if (attempts.count >= ADMIN_LOGIN_MAX_ATTEMPTS) {
-      return sendError(res, 429, "로그인 시도가 너무 많습니다. 15분 후 다시 시도해 주세요.");
-    }
     const body = await readBody(req);
     const emailMatches = secureTextEqual(String(body.email || "").trim().toLowerCase(), ADMIN_EMAIL.toLowerCase());
     const passwordMatches = secureTextEqual(String(body.password || ""), ADMIN_PASSWORD);
     if (!emailMatches || !passwordMatches) {
-      attempts.count += 1;
       return sendError(res, 401, "관리자 이메일 또는 비밀번호를 확인해 주세요.");
     }
-    adminLoginAttempts.delete(ip);
     const token = createAdminToken();
     return send(res, 200, {
       token,
