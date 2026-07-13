@@ -1,0 +1,156 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>윤슬마켓 상품 상세</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="/style.css?v=20260712-mobile-header-left">
+  <link rel="stylesheet" href="/detail.css?v=detail-type-refine-2-20260713">
+</head>
+<body>
+  <header class="lux-header">
+    <button class="mobile-menu" id="mobileMenu" aria-label="??">?</button>
+    <a class="lux-logo" href="/">윤슬마켓<small>YOONSEUL MARKET</small></a>
+    <nav class="main-nav" id="mainNav">
+      <a href="/#best">베스트</a><a href="/#all">전체상품</a>
+      <span class="featured-brand-nav" id="featuredBrandNav"></span>
+      <div class="more-menu"><button id="moreButton" type="button">더보기⌄</button><div class="more-brand-panel" id="moreBrandPanel" aria-label="전체 브랜드"></div></div>
+    </nav>
+    <div class="nav-actions">
+      <a class="login-button" id="memberJoinButton" href="/join">로그인</a>
+      <button class="logout-button" id="memberLogoutButton" type="button" hidden>로그아웃</button>
+      <a class="header-search-button" href="/#searchHero" aria-label="검색">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg>
+      </a>
+      <button class="cart-button" id="sharedCartButton" type="button" aria-label="장바구니">
+        <svg viewBox="0 0 24 24"><path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 7H6M10 20h.01M17 20h.01"/></svg><em id="sharedCartCount">0</em>
+      </button>
+    </div>
+  </header>
+  <div class="mobile-drawer-overlay" id="mobileDrawerOverlay"></div>
+  <aside class="mobile-category-drawer" id="mobileCategoryDrawer" aria-hidden="true">
+    <div class="mobile-drawer-head">
+      <div><strong>브랜드</strong><small>BRANDS</small></div>
+      <button id="mobileDrawerClose" type="button" aria-label="메뉴 닫기">×</button>
+    </div>
+    <nav class="mobile-brand-list" id="mobileBrandDrawerList" aria-label="모바일 브랜드 목록"></nav>
+    <div class="mobile-drawer-account" id="mobileDrawerAccount"></div>
+  </aside>
+
+  <main class="detail-shell">
+    <section class="detail-page" id="detailPage">
+      <nav class="detail-breadcrumb" id="detailBreadcrumb" aria-label="상품 경로"></nav>
+
+      <section class="product-top">
+        <div class="detail-gallery">
+          <figure class="main-image-wrap">
+            <img id="mainProductImage" alt="상품 대표 이미지">
+            <figcaption class="image-caption"><i class="fa-regular fa-image"></i> 이미지 클릭 또는 썸네일 선택</figcaption>
+          </figure>
+          <div class="thumbnail-strip" id="thumbnailStrip" aria-label="상품 이미지 썸네일"></div>
+        </div>
+
+        <aside class="detail-info" aria-label="상품 구매 정보">
+          <p class="brand-kicker" id="brandKicker"></p>
+          <h1 id="productName"></h1>
+
+          <div class="review-line" aria-label="리뷰 평점">
+            <span class="stars">★</span>
+            <b>0.0</b>
+            <span>· 0건 리뷰</span>
+          </div>
+
+          <div class="price-area">
+            <div class="sale-line" id="saleLine" hidden>
+              <span class="sale-rate" id="saleRate"></span>
+              <del id="productOldPrice"></del>
+            </div>
+            <strong id="productPrice"></strong>
+          </div>
+
+          <p class="shipping-line"><i class="fa-solid fa-truck-fast"></i> 무료배송</p>
+
+          <div class="option-box" id="optionBox" hidden>
+            <label for="optionSelect">옵션 선택</label>
+            <div class="custom-select">
+              <select id="optionSelect">
+                <option value="">옵션을 선택해 주세요</option>
+              </select>
+              <i class="fa-solid fa-chevron-down"></i>
+            </div>
+          </div>
+
+          <div class="quantity-row">
+            <span>수량</span>
+            <div class="quantity-control" aria-label="상품 수량 선택">
+              <button type="button" id="quantityMinus" aria-label="수량 감소">−</button>
+              <output id="quantityValue">1</output>
+              <button type="button" id="quantityPlus" aria-label="수량 증가">+</button>
+            </div>
+          </div>
+
+          <div class="total-row">
+            <span>총 상품금액</span>
+            <strong id="totalPrice"></strong>
+          </div>
+
+          <button type="button" class="buy-action" id="buyButton">구매하기</button>
+
+          <div class="sub-actions">
+            <button type="button" id="wishButton"><i class="fa-regular fa-heart"></i> 찜하기</button>
+            <button type="button" id="chatButton"><i class="fa-regular fa-comment"></i> 카톡문의</button>
+            <button type="button" id="cartButton"><i class="fa-solid fa-bag-shopping"></i> 장바구니</button>
+          </div>
+
+          <dl class="meta-list" aria-label="상품 기본 정보">
+            <div><dt>브랜드</dt><dd id="metaBrand"></dd></div>
+            <div><dt>카테고리</dt><dd id="metaCategory"></dd></div>
+            <div><dt>상품번호</dt><dd id="metaId"></dd></div>
+          </dl>
+        </aside>
+      </section>
+
+      <section class="detail-content-section" id="detailContentSection">
+        <div class="section-heading">
+          <small>PRODUCT DETAIL</small>
+          <h2>상세 정보</h2>
+        </div>
+        <div class="detail-content-body">
+          <article class="detail-description-card">
+            <small>상품 설명</small>
+            <p id="productDescription"></p>
+          </article>
+          <div class="detail-image-list" id="detailImageList" aria-label="상품 상세 이미지"></div>
+        </div>
+      </section>
+
+      <section class="review-section">
+        <div class="review-head">
+          <div>
+            <h2>고객 리뷰</h2>
+            <p><span>☆☆☆☆☆</span> <b>0.0</b> · 0건</p>
+          </div>
+          <small>로그인 후 리뷰 작성이 가능합니다</small>
+        </div>
+        <div class="empty-review">아직 리뷰가 없습니다</div>
+      </section>
+    </section>
+
+  </main>
+
+  <div class="detail-toast" id="detailToast"></div>
+  <script src="/cart-utils.js"></script>
+  <script src="/shared-header.js?v=header-korean-20260712"></script>
+  <script src="/detail.js?v=representative-thumbs-multi-20260712"></script>
+  <script src="/shop-member-cart.js?v=header-korean-20260712"></script>
+</body>
+</html>
+
+
+
+

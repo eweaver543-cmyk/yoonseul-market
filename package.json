@@ -1,0 +1,19 @@
+{
+  "name": "yoonseul-market",
+  "version": "1.2.0",
+  "private": true,
+  "description": "Yoonseul Market premium shopping mall and admin server",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "health": "node -e \"fetch('http://127.0.0.1:' + (process.env.PORT || 3000) + '/api/health').then(r=>r.text()).then(t=>console.log(t))\"",
+    "check": "node --check server.js && node --check public/admin.js && node --check public/detail.js && node --check public/cart.js && node --check public/mypage.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "busboy": "^1.6.0",
+    "sharp": "^0.35.3"
+  }
+}

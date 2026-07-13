@@ -1,0 +1,7 @@
+<svg width="640" height="640" viewBox="0 0 640 640" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="640" rx="28" fill="#F4F1EA"/>
+  <rect x="96" y="96" width="448" height="448" rx="24" fill="#FBF9F6" stroke="#E5DED1" stroke-width="2"/>
+  <path d="M214 404L292 314L356 366L426 284L500 404H214Z" fill="#DDD4C5"/>
+  <circle cx="266" cy="244" r="34" fill="#E6DDCF"/>
+  <text x="320" y="490" text-anchor="middle" fill="#8C8378" font-family="Arial, sans-serif" font-size="28" letter-spacing="3">YOONSEUL MARKET</text>
+</svg>

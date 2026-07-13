@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="전 세계 럭셔리 시그니처 액세서리를 한곳에서 만나는 윤슬마켓">
+  <title>윤슬마켓 | Global Luxury Selection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700&family=Noto+Serif+KR:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css">
+  <link rel="stylesheet" href="/style.css?v=20260712-mobile-header-left">
+</head>
+<body>
+  <div class="home-top-banner" id="homeTopBanner" hidden></div>
+  <header class="lux-header">
+    <button class="mobile-menu" id="mobileMenu" aria-label="??">?</button>
+    <a class="lux-logo" href="/">윤슬마켓<small>YOONSEUL MARKET</small></a>
+    <nav class="main-nav" id="mainNav">
+      <a href="#best">베스트</a><a href="#all">전체상품</a>
+      <span class="featured-brand-nav" id="featuredBrandNav"></span>
+      <div class="more-menu"><button id="moreButton">더보기⌄</button><div class="more-brand-panel" id="moreBrandPanel" aria-label="전체 브랜드"></div></div>
+    </nav>
+    <div class="nav-actions">
+      <a class="login-button" id="memberJoinButton" href="/join">로그인</a>
+      <button class="logout-button" id="memberLogoutButton" type="button" hidden>로그아웃</button>
+      <a class="header-search-button" href="#searchHero" aria-label="검색">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg>
+      </a>
+      <button class="cart-button" id="cartButton" aria-label="장바구니">
+        <svg viewBox="0 0 24 24"><path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 7H6M10 20h.01M17 20h.01"/></svg><em id="cartCount">0</em>
+      </button>
+    </div>
+  </header>
+  <div class="mobile-drawer-overlay" id="mobileDrawerOverlay"></div>
+  <aside class="mobile-category-drawer" id="mobileCategoryDrawer" aria-hidden="true">
+    <div class="mobile-drawer-head">
+      <div><strong>브랜드</strong><small>BRANDS</small></div>
+      <button id="mobileDrawerClose" type="button" aria-label="메뉴 닫기">×</button>
+    </div>
+    <nav class="mobile-brand-list" id="mobileBrandDrawerList" aria-label="모바일 브랜드 목록"></nav>
+    <div class="mobile-drawer-account" id="mobileDrawerAccount"></div>
+  </aside>
+
+  <main>
+    <section class="search-hero" id="searchHero">
+      <div class="hero-inner">
+        <p>THE WORLD'S FINEST SELECTION</p>
+        <h1>전 세계 럭셔리 시그니처 액세서리를<br>한곳에서, 전 세계로</h1>
+        <span>브랜드 또는 상품명을 입력하고 원하는 제품을 빠르게 찾아보세요.</span>
+        <form class="search-form" id="searchForm">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/></svg>
+          <input id="searchInput" placeholder="상품 또는 브랜드명을 입력하세요">
+          <button type="submit">검색</button>
+        </form>
+        <div class="quick-tags"><small>인기 검색어</small><span id="quickTagList"></span></div>
+      </div>
+    </section>
+
+    <section class="best-section section" id="best">
+      <div class="section-title">
+        <div><small>CURATED RANKING</small><h2>베스트 상품</h2><p>지금 가장 사랑받는 럭셔리 셀렉션을 만나보세요.</p></div>
+        <div class="ranking-tabs" id="rankingTabs"><button class="active" data-rank="realtime">실시간</button><button data-rank="weekly">주간</button><button data-rank="monthly">월간</button></div>
+      </div>
+      <div class="best-grid" id="bestGrid"></div>
+    </section>
+
+    <section class="all-section section" id="all">
+      <div class="section-title">
+        <div><small>THE COLLECTION</small><h2>전체 상품</h2><p>엄선된 글로벌 럭셔리 아이템을 브랜드별로 둘러보세요.</p></div>
+        <div class="sort-wrap"><span id="productTotal">총 10개</span><select id="sortSelect"><option value="featured">추천순</option><option value="low">낮은 가격순</option><option value="high">높은 가격순</option></select></div>
+      </div>
+      <div class="catalog-layout">
+        <aside class="brand-sidebar">
+          <div class="sidebar-head"><b>브랜드</b><button id="filterReset">초기화</button></div>
+          <div id="brandFilters"></div>
+        </aside>
+        <div class="catalog-main">
+          <div class="brand-collection-header" id="brandCollectionHeader" hidden></div>
+          <div class="active-filter" id="activeFilter">ALL COLLECTION</div>
+          <div class="product-grid" id="productGrid"></div>
+          <div class="empty-state" id="emptyState" hidden><b>검색 결과가 없습니다.</b><p>다른 브랜드나 상품명으로 검색해 주세요.</p><button id="emptyReset">전체 상품 보기</button></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="home-bottom-banner" id="homeBottomBanner" hidden></section>
+  </main>
+
+  <footer class="world-footer" id="footer">
+    <div class="footer-main">
+      <section class="footer-brand">
+        <a href="/">윤슬마켓<small>YOONSEUL MARKET</small></a>
+        <p>윤슬마켓은 전 세계 프리미엄 럭셔리 제품들을 엄선하여 합리적인 가격에 선보이는 1차 판매 디지털 부티크 스토어입니다.</p>
+      </section>
+      <nav class="footer-column" aria-label="고객 서비스">
+        <h3>고객 서비스</h3>
+        <a href="/apply">배송 안내</a>
+        <a href="https://unipass.customs.go.kr/csp/persIndexRectOnslCrtf.do?qryIssTp=1" target="_blank" rel="noopener">개인통관번호 발급받기 ↗</a>
+        <a href="#footer">반품 및 교환</a>
+        <a href="#footer">공지사항</a>
+      </nav>
+      <nav class="footer-column" aria-label="회사 소개">
+        <h3>회사 소개</h3>
+        <a href="#footer">회사 소개</a>
+        <a href="#footer">법적 고지</a>
+      </nav>
+      <nav class="footer-column" aria-label="문의 채널">
+        <h3>문의 채널</h3>
+        <a href="https://pf.kakao.com/" target="_blank" rel="noopener" id="footerKakaoLink">카톡문의 ↗</a>
+        <a href="https://line.me/" target="_blank" rel="noopener" id="footerLineLink">라인문의 ↗</a>
+        <a href="https://t.me/" target="_blank" rel="noopener" id="footerTelegramLink">텔레문의 ↗</a>
+        <a href="https://forms.google.com/" target="_blank" rel="noopener" id="footerGoogleLink">구글문의 ↗</a>
+        <a href="https://channel.io/" target="_blank" rel="noopener" id="footerLiveChannelLink">라이브채널 ↗</a>
+      </nav>
+      <section class="footer-contact">
+        <h3>CONTACT</h3>
+        <a href="mailto:eweaver543@gmail.com">eweaver543@gmail.com</a>
+        <p>MON–FRI · 10:00–18:00 SGT</p>
+        <span>싱가폴 등록</span>
+      </section>
+    </div>
+    <div class="footer-bottom">
+      <small>© 2026 Yoonseul Market. All rights reserved.</small>
+    </div>
+  </footer>
+  <div class="info-modal" id="shippingGuideModal" aria-hidden="true" hidden>
+    <div class="info-modal__backdrop" data-shipping-guide-close="true"></div>
+    <section class="info-modal__panel" role="dialog" aria-modal="true" aria-labelledby="shippingGuideTitle">
+      <button class="info-modal__close" type="button" aria-label="배송 안내 닫기" data-shipping-guide-close="true">×</button>
+      <p class="info-modal__eyebrow">SHIPPING GUIDE</p>
+      <h2 id="shippingGuideTitle">✈️ 윤슬마켓 배송 안내</h2>
+      <div class="info-modal__body">
+        <p>안녕하세요, 윤슬마켓을 이용해 주시는 고객님께 깊은 감사를 드립니다.</p>
+        <p>윤슬마켓은 고객님께 최상의 탑티어 퀄리티 상품을 안전하게 전달하기 위해, 엄선된 글로벌 현지 파트너사를 통해 1:1 주문 제작 및 직배송 방식으로 운영되고 있습니다. 안전한 배송을 위해 아래 안내 사항을 반드시 확인해 주시기 바랍니다.</p>
+        <div class="info-modal__section">
+          <h3>📌 01. 배송 기간 및 프로세스</h3>
+          <p>평균 배송 기간: 평일 기준 7일 ~ 12일 소요 (주말 및 공휴일 제외)</p>
+          <p>배송 과정: 주문 완료 ➔ 현지 1:1 리오더 및 장인 검수 ➔ 항공 물류 발송 ➔ 국내 세관 통관 ➔ 국내 택배사 위탁 및 최종 배송</p>
+          <p>주의: 해외 현지 물류 사정, 항공 스케줄, 또는 세관 통관 절차에 따라 미세하게 지연될 수 있는 점 양해 부탁드립니다.</p>
+        </div>
+        <div class="info-modal__section">
+          <h3>📌 02. 실시간 배송 추적 (운송장 안내)</h3>
+          <p>상품이 안전하게 국내 세관을 통과하여 국내 택배사(CJ대한통운/우체국 등)에 인계되는 시점부터 실시간 조회가 가능합니다.</p>
+          <p>배송이 시작되면 고객님의 상담 채널(카카오톡/라인/텔레그램)을 통해 운송장 번호를 개별 안내해 드립니다.</p>
+        </div>
+        <div class="info-modal__section">
+          <h3>📌 03. 통관 및 배송비 관련 안내</h3>
+          <p>윤슬마켓의 모든 상품은 안전하고 정확하게 세관을 통과하여 발송됩니다.</p>
+          <p>통관 과정에서 고객님의 개인통관고유부호가 필요할 수 있으며, 필요 시 상담원이 안전하게 접수를 도와드립니다.</p>
+        </div>
+      </div>
+      <div class="info-modal__actions">
+        <button class="info-modal__confirm" type="button" data-shipping-guide-close="true">확인했어요</button>
+      </div>
+    </section>
+  </div>
+  <div class="info-modal" id="returnsGuideModal" aria-hidden="true" hidden>
+    <div class="info-modal__backdrop" data-returns-guide-close="true"></div>
+    <section class="info-modal__panel" role="dialog" aria-modal="true" aria-labelledby="returnsGuideTitle">
+      <button class="info-modal__close" type="button" aria-label="반품 및 교환 안내 닫기" data-returns-guide-close="true">×</button>
+      <p class="info-modal__eyebrow">RETURNS & EXCHANGES GUIDE</p>
+      <h2 id="returnsGuideTitle">📢 반품 및 교환 안내</h2>
+      <div class="info-modal__body">
+        <div class="info-modal__section">
+          <h3>📌 01. 단순 변심에 의한 반품/교환 (고객 부담)</h3>
+          <p>고객님의 개인적인 취향 변화, 사이즈 미스, 색상 불만족 등 제품 하자가 아닌 단순 변심으로 인한 교환 및 반품 안내입니다.</p>
+          <p>가능 기간: 상품을 수령하신 날로부터 7일 이내에만 신청이 가능합니다.</p>
+          <p>왕복 배송비 부담: 단순 변심으로 인한 교환 및 반품 시 발생하는 모든 왕복 배송비는 고객님 부담입니다.</p>
+          <p>교환/반품 배송비: 교환 배송비: 0,000원 / 반품 배송비: 0,000원 (편도)</p>
+          <p>주의 사항: 상품의 가치가 훼손된 경우(택 제거, 착용 흔적, 오염, 향수 냄새, 세탁 등)에는 7일 이내라도 교환 및 환불이 절대 불가능합니다.</p>
+        </div>
+        <div class="info-modal__section">
+          <h3>📌 02. 상품 하자 및 오배송에 의한 반품/교환 (회사 부담)</h3>
+          <p>받으신 상품에 불량이 있거나, 주문하신 것과 다른 상품이 배송된 경우입니다.</p>
+          <p>가능 기간: 상품 수령 후 7일 이내 (또는 그 사실을 알 수 있었던 날로부터 30일 이내) 신청 가능합니다.</p>
+          <p>배송비 부담: 배송비는 전액 저희 쇼핑몰에서 부담합니다.</p>
+          <p>처리 절차: 불량 부위 또는 오배송된 상품의 사진을 촬영하여 고객센터(카카오톡/라인/텔레그램)로 보내주시면 신속하게 동일 상품으로 교환 또는 환불을 도와드립니다.</p>
+        </div>
+        <div class="info-modal__section">
+          <h3>⚠️ 반품/교환이 절대 불가능한 경우</h3>
+          <p>아래의 경우에는 단순 변심 및 불량 사유를 불문하고 교환/환불이 불가하오니 신중한 구매 부탁드립니다.</p>
+          <p>반품 시한 경과: 상품 수령 후 7일이 지난 경우</p>
+          <p>사용 흔적 발견: 고객의 책임 있는 사유로 상품이 훼손, 오염되었거나 착용 흔적(화장품, 향수 냄새 등)이 있는 경우</p>
+          <p>상품 가치 훼손: 상품의 택(Tag) 제거, 라벨 훼손, 세탁, 수선을 한 경우</p>
+          <p>세트 상품 일부 누락: 구성품(사은품, 부속품, 보증서 등)을 분실하거나 훼손한 경우</p>
+          <p>주문 제작 상품: 고객 맞춤형으로 1:1 주문 제작(주얼리 각인, 맞춤 사이즈 등)되어 재판매가 불가능한 경우</p>
+        </div>
+      </div>
+      <div class="info-modal__actions">
+        <button class="info-modal__confirm" type="button" data-returns-guide-close="true">확인했어요</button>
+      </div>
+    </section>
+  </div>
+  <div class="info-modal" id="noticeGuideModal" aria-hidden="true" hidden>
+    <div class="info-modal__backdrop" data-notice-guide-close="true"></div>
+    <section class="info-modal__panel" role="dialog" aria-modal="true" aria-labelledby="noticeGuideTitle">
+      <button class="info-modal__close" type="button" aria-label="공지사항 닫기" data-notice-guide-close="true">×</button>
+      <p class="info-modal__eyebrow">NOTICE</p>
+      <h2 id="noticeGuideTitle">📢 [필독] 구매 방법 및 배송 안내</h2>
+      <div class="info-modal__body">
+        <p>안녕하세요, 고객님! 저희 쇼핑몰을 이용해 주셔서 감사합니다.</p>
+        <p>원활한 주문과 상담을 위해 아래 공지사항을 반드시 확인해 주시기 바랍니다.</p>
+        <div class="info-modal__section">
+          <h3>📌 01. 주문 및 문의 방법</h3>
+          <p>저희는 고객 한 분 한 분과의 정확한 상담을 위해 카카오톡 및 라인을 통한 1:1 맞춤 주문을 진행하고 있습니다.</p>
+          <p>상품 캡쳐: 원하시는 상품의 이미지를 화면 캡쳐해 주세요.</p>
+          <p>상담 요청: 아래의 카카오톡 또는 라인 채널로 캡쳐한 이미지를 보내주세요.</p>
+          <p>안내 및 주문: 사이즈, 상세 디테일 안내와 함께 친절하게 주문을 도와드리겠습니다.</p>
+        </div>
+        <div class="info-modal__section">
+          <h3>✈️ 02. 배송 안내</h3>
+          <p>저희 상품은 높은 퀄리티를 위해 1:1 리오더 방식으로 진행되는 해외 배송 상품입니다.</p>
+          <p>배송 기간: 평일 기준 7일 ~ 12일 소요 (주말 및 공휴일 제외)</p>
+          <p>해외 현지 물류 사정이나 통관 절차에 따라 미세하게 지연될 수 있는 점 양해 부탁드리며, 안전하고 정확하게 세관을 통과하여 발송해 드립니다.</p>
+          <p>배송이 시작되면 운송장 번호를 개별 안내해 드립니다.</p>
+        </div>
+        <div class="info-modal__section">
+          <h3>⚠️ 구매 전 주의사항</h3>
+          <p>1:1 주문 제작 및 해외 배송 특성상, 단순 변심으로 인한 교환 및 환불은 어려우니 상담 시 사이즈와 디테일을 충분히 확인하신 후 신중한 구매 부탁드립니다.</p>
+          <p>미세한 실밥, 본드 자국, 배송 중 발생하는 박스 구겨짐 등은 불량 사유가 되지 않습니다. 정밀 검수 후 최상의 컨디션으로 발송됩니다.</p>
+        </div>
+      </div>
+      <div class="info-modal__actions">
+        <button class="info-modal__confirm" type="button" data-notice-guide-close="true">확인했어요</button>
+      </div>
+    </section>
+  </div>
+  <div class="join-modal-backdrop" id="joinModal" hidden>
+    <section class="join-modal" role="dialog" aria-modal="true" aria-labelledby="joinModalTitle">
+      <button class="join-modal-close" id="joinModalClose" type="button" aria-label="회원가입 창 닫기">×</button>
+      <p>YOONSEUL MEMBERSHIP</p>
+      <h2 id="joinModalTitle">윤슬마켓 회원가입</h2>
+      <span>가입 정보는 관리자 회원 관리 화면에 안전하게 연동됩니다.</span>
+      <form id="joinForm">
+        <label>회원명<input name="name" autocomplete="name" maxlength="30" placeholder="이름을 입력하세요"></label>
+        <label>아이디 / 이메일<input name="email" type="email" autocomplete="email" required placeholder="name@example.com"></label>
+        <label>연락처<input name="phone" autocomplete="tel" maxlength="20" placeholder="010-0000-0000"></label>
+        <label>비밀번호<input name="password" type="password" autocomplete="new-password" minlength="4" required placeholder="4자 이상 입력하세요"></label>
+        <div class="join-form-message" id="joinFormMessage" aria-live="polite"></div>
+        <button class="join-submit" type="submit">회원가입 완료</button>
+      </form>
+      <a class="admin-login-link" href="/admin">관리자 로그인</a>
+    </section>
+  </div>
+  <div class="notice-popup-backdrop" id="noticePopup" hidden>
+    <section class="notice-popup" role="dialog" aria-modal="true" aria-labelledby="noticePopupTitle">
+      <button class="notice-popup-close" id="noticePopupClose" type="button" aria-label="공지 팝업 닫기">×</button>
+      <small>YOONSEUL MARKET NOTICE</small>
+      <h2 id="noticePopupTitle"></h2>
+      <div class="notice-popup-content" id="noticePopupContent"></div>
+      <div class="notice-popup-actions">
+        <button type="button" id="noticePopupToday">오늘 하루 이 창을 열지 않기</button>
+        <button type="button" id="noticePopupCloseBottom">닫기</button>
+      </div>
+    </section>
+  </div>
+  <div class="toast" id="toast"></div>
+  <script src="/cart-utils.js"></script>
+  <script src="/app.js"></script>
+  <script src="/shop-member-cart.js?v=header-korean-20260712"></script>
+</body>
+</html>

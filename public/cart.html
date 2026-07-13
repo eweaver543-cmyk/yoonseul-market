@@ -1,0 +1,58 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>장바구니 | 윤슬마켓</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&family=Noto+Serif+KR:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/member-pages.css">
+</head>
+<body>
+  <header class="lux-header">
+    <button class="mobile-menu" id="mobileMenu" type="button" aria-label="메뉴">&#9776;</button>
+    <a class="lux-logo" href="/">윤슬마켓<small>YOONSEUL MARKET</small></a>
+    <nav class="main-nav" id="mainNav">
+      <a href="/#best">베스트</a>
+      <a href="/#all">전체상품</a>
+      <span class="featured-brand-nav" id="featuredBrandNav"></span>
+      <div class="more-menu">
+        <button id="moreButton" type="button">더보기&#9662;</button>
+        <div class="more-brand-panel" id="moreBrandPanel" aria-label="전체 브랜드"></div>
+      </div>
+    </nav>
+    <div class="nav-actions">
+      <a class="login-button" id="memberJoinButton" href="/join">로그인</a>
+      <button class="logout-button" id="memberLogoutButton" type="button" hidden>로그아웃</button>
+      <a class="header-search-button" href="/#searchHero" aria-label="검색">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg>
+      </a>
+      <button class="cart-button" id="sharedCartButton" type="button" aria-label="장바구니">
+        <svg viewBox="0 0 24 24"><path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 7H6M10 20h.01M17 20h.01"/></svg><em id="sharedCartCount">0</em>
+      </button>
+    </div>
+  </header>
+  <div class="mobile-drawer-overlay" id="mobileDrawerOverlay"></div>
+  <aside class="mobile-category-drawer" id="mobileCategoryDrawer" aria-hidden="true">
+    <div class="mobile-drawer-head">
+      <div><strong>브랜드</strong><small>BRANDS</small></div>
+      <button id="mobileDrawerClose" type="button" aria-label="메뉴 닫기">X</button>
+    </div>
+    <nav class="mobile-brand-list" id="mobileBrandDrawerList" aria-label="모바일 브랜드 목록"></nav>
+    <div class="mobile-drawer-account" id="mobileDrawerAccount"></div>
+  </aside>
+
+  <main class="user-shell" id="cartApp"></main>
+
+  <script src="/cart-utils.js"></script>
+  <script src="/shared-header.js?v=header-korean-20260712"></script>
+  <script src="/shop-member-cart.js?v=header-korean-20260712"></script>
+  <script src="/cart.js?v=mypage-button-20260712"></script>
+</body>
+</html>
+
+
+

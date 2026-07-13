@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>윤슬마켓 회사 소개</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&family=Noto+Serif+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="/style.css?v=20260712-mobile-header-left">
+  <link rel="stylesheet" href="/about.css">
+</head>
+<body class="about-shell">
+  <header class="lux-header">
+    <button class="mobile-menu" id="mobileMenu" aria-label="??">?</button>
+    <a class="lux-logo" href="/">윤슬마켓<small>YOONSEUL MARKET</small></a>
+    <nav class="main-nav" id="mainNav">
+      <a href="/#best">베스트</a>
+      <a href="/#all">전체상품</a>
+      <span class="featured-brand-nav" id="featuredBrandNav"></span>
+      <div class="more-menu">
+        <button id="moreButton" type="button">더보기⌄</button>
+        <div class="more-brand-panel" id="moreBrandPanel" aria-label="전체 브랜드"></div>
+      </div>
+    </nav>
+    <div class="nav-actions">
+      <a class="login-button" id="memberJoinButton" href="/join">로그인</a>
+      <button class="logout-button" id="memberLogoutButton" type="button" hidden>로그아웃</button>
+      <a class="header-search-button" href="/#searchHero" aria-label="검색">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg>
+      </a>
+      <button class="cart-button" id="sharedCartButton" type="button" aria-label="장바구니">
+        <svg viewBox="0 0 24 24"><path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 7H6M10 20h.01M17 20h.01"/></svg><em id="sharedCartCount">0</em>
+      </button>
+    </div>
+  </header>
+  <div class="mobile-drawer-overlay" id="mobileDrawerOverlay"></div>
+  <aside class="mobile-category-drawer" id="mobileCategoryDrawer" aria-hidden="true">
+    <div class="mobile-drawer-head">
+      <div><strong>브랜드</strong><small>BRANDS</small></div>
+      <button id="mobileDrawerClose" type="button" aria-label="메뉴 닫기">×</button>
+    </div>
+    <nav class="mobile-brand-list" id="mobileBrandDrawerList" aria-label="모바일 브랜드 목록"></nav>
+    <div class="mobile-drawer-account" id="mobileDrawerAccount"></div>
+  </aside>
+
+  <main>
+    <section class="about-hero">
+      <div class="about-container">
+        <div class="about-hero__card">
+          <div class="about-hero__content">
+            <p class="about-kicker">ABOUT YOONSEUL MARKET</p>
+            <h1>전 세계 프리미엄 럭셔리의 가치, 더 정직하고 세련된 방식으로 전합니다.</h1>
+            <p class="about-hero__lead">
+              윤슬마켓은 전 세계 프리미엄 럭셔리 제품을 보다 신뢰할 수 있는 방식으로 소개하는 디지털 부티크입니다.
+              단순한 상품 판매를 넘어, 고객 한 분 한 분의 취향과 기준에 맞춘 정돈된 큐레이션과 세심한 상담,
+              그리고 안전한 글로벌 배송 경험을 함께 제공합니다.
+            </p>
+            <div class="about-hero__meta">
+              <span>1:1 프라이빗 큐레이션</span>
+              <span>글로벌 파트너 네트워크</span>
+              <span>안전한 직배송 프로세스</span>
+            </div>
+          </div>
+          <div class="about-hero__visual">
+            <div class="about-hero__visual-inner">
+              <div class="about-hero__quote">
+                <strong>Luxury, Carefully Curated.</strong>
+                <p>고객이 오래 신뢰할 수 있는 기준으로, 브랜드의 가치와 구매 경험의 완성도를 함께 설계합니다.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section">
+      <div class="about-container">
+        <div class="about-section__head">
+          <p>BRAND STORY</p>
+          <h2>윤슬마켓이 지키는 운영 철학</h2>
+        </div>
+        <div class="about-story">
+          <article>
+            <h3>정제된 셀렉션</h3>
+            <p>
+              윤슬마켓은 빠르게 소비되는 트렌드보다, 오랫동안 가치 있게 남는 럭셔리 제품에 집중합니다.
+              브랜드의 정체성과 완성도를 기준으로 제품을 선별하고, 고객이 믿고 선택할 수 있는 큐레이션을 제공합니다.
+            </p>
+          </article>
+          <article>
+            <h3>프라이빗한 상담 경험</h3>
+            <p>
+              화면에 보이는 정보만으로는 충분하지 않은 디테일을 위해, 카카오톡·라인 등 1:1 채널을 중심으로
+              보다 세밀한 안내를 진행합니다. 사이즈, 소재감, 착용 분위기까지 꼼꼼히 확인한 뒤 구매하실 수 있도록 돕습니다.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section">
+      <div class="about-container">
+        <div class="about-section__head">
+          <p>OUR VALUES</p>
+          <h2>고객이 체감하는 세 가지 기준</h2>
+        </div>
+        <div class="about-values">
+          <article class="about-value">
+            <span>01</span>
+            <h3>신뢰</h3>
+            <p>안내와 실제 수령 경험의 간격을 줄이기 위해, 상품 정보와 주문 프로세스를 최대한 투명하게 설명합니다.</p>
+          </article>
+          <article class="about-value">
+            <span>02</span>
+            <h3>디테일</h3>
+            <p>상품의 이미지, 컨디션, 배송 흐름, 통관 안내까지 구매 과정 전반을 세밀하게 관리합니다.</p>
+          </article>
+          <article class="about-value">
+            <span>03</span>
+            <h3>안정감</h3>
+            <p>글로벌 현지 파트너와의 협업, 체계적인 물류 흐름, 고객 응대를 통해 편안한 구매 경험을 지향합니다.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section">
+      <div class="about-container">
+        <div class="about-service">
+          <div class="about-section__head">
+            <p>SERVICE FLOW</p>
+            <h2>윤슬마켓의 주문 진행 방식</h2>
+          </div>
+          <p>모든 주문은 보다 높은 퀄리티와 정확한 응대를 위해 아래와 같은 흐름으로 운영됩니다.</p>
+          <div class="about-service__grid">
+            <article class="about-service__step">
+              <strong>STEP 01</strong>
+              <b>상품 상담</b>
+              <p>원하시는 상품 캡처 또는 상품명 기준으로 1:1 상담을 진행합니다.</p>
+            </article>
+            <article class="about-service__step">
+              <strong>STEP 02</strong>
+              <b>주문 확정</b>
+              <p>사이즈·상세 디테일·배송 관련 내용을 충분히 확인한 뒤 주문을 확정합니다.</p>
+            </article>
+            <article class="about-service__step">
+              <strong>STEP 03</strong>
+              <b>현지 진행</b>
+              <p>글로벌 현지 파트너사를 통해 1:1 리오더 및 검수 절차를 진행합니다.</p>
+            </article>
+            <article class="about-service__step">
+              <strong>STEP 04</strong>
+              <b>국내 배송</b>
+              <p>항공 물류, 세관 통관, 국내 택배사 인계를 거쳐 고객님께 안전하게 전달됩니다.</p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section">
+      <div class="about-container">
+        <div class="about-promise">
+          <div class="about-section__head">
+            <p>OUR PROMISE</p>
+            <h2>윤슬마켓의 약속</h2>
+          </div>
+          <p>윤슬마켓은 고객이 단순히 제품을 구매하는 것이 아니라, 신뢰할 수 있는 럭셔리 구매 경험을 누리실 수 있도록 아래의 기준을 지켜갑니다.</p>
+          <ul>
+            <li>상담 단계부터 배송까지 일관된 안내와 응대를 유지합니다.</li>
+            <li>브랜드의 무드와 제품의 디테일을 더 정확히 전달하기 위해 최선을 다합니다.</li>
+            <li>해외 배송 및 통관 절차에서 필요한 안내를 빠짐없이 제공합니다.</li>
+            <li>고객의 취향과 기준을 존중하는 프라이빗 부티크 경험을 지향합니다.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section">
+      <div class="about-container">
+        <div class="about-cta">
+          <div>
+            <h3>윤슬마켓과 함께 더 편안한 럭셔리 쇼핑을 시작해 보세요.</h3>
+            <p>상품 상담부터 주문 안내까지, 고객님의 취향에 맞는 선택을 함께 도와드립니다.</p>
+          </div>
+          <div class="about-cta__actions">
+            <a href="/">메인으로 돌아가기</a>
+            <a href="/apply">구매대행 문의하기</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="world-footer" id="footer">
+    <div class="footer-main">
+      <section class="footer-brand">
+        <a href="/">윤슬마켓<small>YOONSEUL MARKET</small></a>
+        <p>윤슬마켓은 전 세계 프리미엄 럭셔리 제품들을 엄선하여 합리적인 가격에 선보이는 1차 판매 디지털 부티크 스토어입니다.</p>
+      </section>
+      <nav class="footer-column" aria-label="고객 서비스">
+        <h3>고객 서비스</h3>
+        <a href="/">배송 안내</a>
+        <a href="https://unipass.customs.go.kr/csp/persIndexRectOnslCrtf.do?qryIssTp=1" target="_blank" rel="noopener">개인통관번호 발급받기 ↗</a>
+        <a href="/">반품 및 교환</a>
+        <a href="/">공지사항</a>
+      </nav>
+      <nav class="footer-column" aria-label="회사 소개">
+        <h3>회사 소개</h3>
+        <a href="/about.html">회사 소개</a>
+        <a href="/legal.html">법적 고지</a>
+      </nav>
+      <nav class="footer-column" aria-label="문의 채널">
+        <h3>문의 채널</h3>
+        <a href="https://pf.kakao.com/" target="_blank" rel="noopener">카톡문의 ↗</a>
+        <a href="https://line.me/" target="_blank" rel="noopener">라인문의 ↗</a>
+        <a href="https://t.me/" target="_blank" rel="noopener">텔레문의 ↗</a>
+        <a href="https://forms.google.com/" target="_blank" rel="noopener">구글문의 ↗</a>
+        <a href="https://channel.io/" target="_blank" rel="noopener">라이브채널 ↗</a>
+      </nav>
+      <section class="footer-contact">
+        <h3>CONTACT</h3>
+        <a href="mailto:eweaver543@gmail.com">eweaver543@gmail.com</a>
+        <p>MON–FRI · 10:00–18:00 SGT</p>
+      </section>
+    </div>
+    <div class="footer-bottom">
+      <small>© 2026 Yoonseul Market. All rights reserved.</small>
+    </div>
+  </footer>
+
+  <script src="/cart-utils.js"></script>
+  <script src="/shop-member-cart.js?v=header-korean-20260712"></script>
+  <script src="/shared-header.js?v=header-korean-20260712"></script>
+</body>
+</html>

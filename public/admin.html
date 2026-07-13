@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>윤슬마켓 관리자</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <link rel="stylesheet" href="/admin.css">
+</head>
+<body>
+  <section class="login-screen" id="loginScreen">
+    <div class="login-brand-panel">
+      <a href="/" class="login-brand">
+        <span>Y</span>
+        <b>윤슬마켓<small>ADMINISTRATION</small></b>
+      </a>
+      <div>
+        <p>YOONSEUL MARKET ADMIN</p>
+        <h1>브랜드 운영의 모든 순간을 한곳에서 관리하세요.</h1>
+        <span>상품 등록부터 주문, 회원, 리뷰, 디자인 설정까지 한 번에 운영할 수 있는 관리자 센터입니다.</span>
+      </div>
+      <small>© 2026 Yoonseul Market</small>
+    </div>
+
+    <form class="login-form" id="loginForm">
+      <p>ADMIN PORTAL</p>
+      <h2>관리자 로그인</h2>
+      <span>등록된 관리자 계정으로 로그인해 주세요.</span>
+
+      <label>이메일
+        <input name="email" type="email" value="eweaver543@gmail.com" required>
+      </label>
+
+      <label>비밀번호
+        <input name="password" type="password" value="aa030456" required>
+      </label>
+
+      <button type="submit">로그인 <i class="fa-solid fa-arrow-right"></i></button>
+      <small id="loginMessage">여러 명이 같은 관리자 계정으로 동시 로그인할 수 있습니다.</small>
+    </form>
+  </section>
+
+  <div class="admin-layout" id="adminApp" hidden>
+    <aside class="admin-sidebar" id="adminSidebar">
+      <a class="sidebar-brand" href="/">
+        <span class="sidebar-logo">Y</span>
+        <span><b>윤슬마켓</b><small>관리자 툴</small></span>
+      </a>
+
+      <div class="sidebar-label">MANAGEMENT</div>
+
+      <nav class="sidebar-nav" id="sidebarNav">
+        <button class="nav-item active" data-view="dashboard" data-label="대시보드"><i class="fa-solid fa-chart-line"></i><span>대시보드</span></button>
+        <button class="nav-item" data-view="brands" data-label="브랜드 관리"><i class="fa-solid fa-tags"></i><span>브랜드 관리</span></button>
+        <button class="nav-item" data-view="categories" data-label="카테고리 관리"><i class="fa-solid fa-layer-group"></i><span>카테고리 관리</span></button>
+        <button class="nav-item" data-view="products" data-label="상품 관리"><i class="fa-solid fa-box-open"></i><span>상품 관리</span></button>
+        <button class="nav-item" data-view="orders" data-label="주문 관리"><i class="fa-solid fa-receipt"></i><span>주문 관리</span><em id="orderBadge">0</em></button>
+        <button class="nav-item" data-view="members" data-label="회원 관리"><i class="fa-solid fa-users"></i><span>회원 관리</span></button>
+        <button class="nav-item" data-view="reviews" data-label="리뷰 관리"><i class="fa-solid fa-star"></i><span>리뷰 관리</span></button>
+        <button class="nav-item" data-view="design" data-label="디자인/배너 관리"><i class="fa-solid fa-images"></i><span>디자인/배너 관리</span></button>
+        <button class="nav-item" data-view="promotions" data-label="프로모션"><i class="fa-solid fa-gift"></i><span>프로모션</span></button>
+        <button class="nav-item" data-view="inquiries" data-label="1:1 문의"><i class="fa-solid fa-comments"></i><span>1:1 문의</span><em>2</em></button>
+        <button class="nav-item" data-view="payments" data-label="결제 수단 관리"><i class="fa-solid fa-credit-card"></i><span>결제 수단 관리</span></button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="/" target="_blank" rel="noreferrer"><i class="fa-solid fa-arrow-up-right-from-square"></i> 홈페이지 바로가기</a>
+        <button id="logoutButton"><i class="fa-solid fa-right-from-bracket"></i> 로그아웃</button>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-header">
+        <div class="header-left">
+          <button class="mobile-sidebar-button" id="mobileSidebarButton" aria-label="사이드바 메뉴">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div>
+            <p>YOONSEUL MARKET</p>
+            <h1 id="pageTitle">대시보드</h1>
+          </div>
+        </div>
+
+        <div class="header-tools">
+          <button aria-label="알림" class="notification-button"><i class="fa-regular fa-bell"></i><span></span></button>
+          <div class="admin-profile"><span>YS</span><div><b>윤슬마켓 관리자</b><small>Super Admin</small></div><i class="fa-solid fa-chevron-down"></i></div>
+        </div>
+      </header>
+
+      <section class="content-area" id="contentArea"></section>
+    </main>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="/admin.js?v=multi-admin-login-20260712"></script>
+</body>
+</html>

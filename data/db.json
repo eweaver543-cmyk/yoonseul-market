@@ -1,0 +1,1122 @@
+{
+  "users": [
+    {
+      "id": "U1001",
+      "email": "minji@example.com",
+      "name": "김민지",
+      "phone": "010-2468-1357",
+      "role": "USER",
+      "grade": "VIP",
+      "status": "ACTIVE",
+      "createdAt": "2026-06-18"
+    },
+    {
+      "id": "U1002",
+      "email": "junho@example.com",
+      "name": "이준호",
+      "phone": "010-9182-7731",
+      "role": "USER",
+      "grade": "GENERAL",
+      "status": "ACTIVE",
+      "createdAt": "2026-07-09T08:30:00+09:00"
+    },
+    {
+      "id": "U1003",
+      "email": "seoyeon@example.com",
+      "name": "박서연",
+      "phone": "010-5543-8820",
+      "role": "USER",
+      "grade": "VIP",
+      "status": "ACTIVE",
+      "createdAt": "2026-07-01T14:20:00+09:00"
+    },
+    {
+      "id": "U1004",
+      "email": "hana@example.com",
+      "name": "최하나",
+      "phone": "010-7721-4408",
+      "role": "USER",
+      "grade": "GENERAL",
+      "status": "ACTIVE",
+      "createdAt": "2026-07-09T12:05:00+09:00"
+    },
+    {
+      "id": "A1001",
+      "email": "admin@yoonseul-logi.kr",
+      "name": "윤슬 관리자",
+      "phone": "02-6959-2400",
+      "role": "ADMIN",
+      "status": "ACTIVE",
+      "createdAt": "2026-01-01"
+    },
+    {
+      "id": "U1005",
+      "email": "dfff@gmail.com",
+      "name": "ㅇㅇㅇ",
+      "phone": "11111",
+      "passwordHash": "822f2935cd87313ab4900483eb4a24003633efc487241c5ca7f1f5e9dbb76e10",
+      "role": "USER",
+      "grade": "GENERAL",
+      "status": "ACTIVE",
+      "createdAt": "2026-07-09T11:24:58.008Z"
+    },
+    {
+      "id": "U1006",
+      "email": "dfddddff@gmail.com",
+      "name": "ㅇㅇㅇ",
+      "phone": "1111111111",
+      "passwordHash": "822f2935cd87313ab4900483eb4a24003633efc487241c5ca7f1f5e9dbb76e10",
+      "role": "USER",
+      "grade": "GENERAL",
+      "status": "ACTIVE",
+      "createdAt": "2026-07-09T11:25:07.994Z"
+    },
+    {
+      "id": "U1007",
+      "email": "join-1783631123275@example.com",
+      "name": "테스트가입",
+      "phone": "",
+      "passwordHash": "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4",
+      "role": "USER",
+      "grade": "GENERAL",
+      "status": "ACTIVE",
+      "createdAt": "2026-07-09T21:05:25.231Z"
+    },
+    {
+      "id": "U1008",
+      "email": "auth-1783632051419@example.com",
+      "name": "전환테스트",
+      "phone": "",
+      "passwordHash": "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4",
+      "role": "USER",
+      "grade": "GENERAL",
+      "status": "ACTIVE",
+      "createdAt": "2026-07-09T21:20:51.946Z"
+    },
+    {
+      "id": "U1009",
+      "email": "google.mresh2s97rk8f3gl@yoonseul-social.local",
+      "name": "Google 회원",
+      "phone": "",
+      "passwordHash": "bc0da61f22698f208ef91ed3b1e0bda8d35f350a51e1b4e783c359fb0a63fc58",
+      "role": "USER",
+      "grade": "GENERAL",
+      "status": "ACTIVE",
+      "createdAt": "2026-07-10T10:24:45.661Z"
+    },
+    {
+      "id": "U1010",
+      "email": "kakao.mresh2s97rk8f3gl@yoonseul-social.local",
+      "name": "카카오 회원",
+      "phone": "",
+      "passwordHash": "f09a8dc7ba1528b1169d81b9fe8ed5b09afb29a8cedf75120ca788a5b329ad46",
+      "role": "USER",
+      "grade": "GENERAL",
+      "status": "ACTIVE",
+      "createdAt": "2026-07-10T10:24:51.189Z"
+    },
+    {
+      "id": "U1011",
+      "email": "ggg@gmail.com",
+      "name": "ggg",
+      "phone": "",
+      "passwordHash": "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4",
+      "role": "USER",
+      "grade": "GENERAL",
+      "status": "ACTIVE",
+      "createdAt": "2026-07-10T10:32:32.427Z"
+    },
+    {
+      "id": "U1012",
+      "email": "gggg@gmail.com",
+      "name": "gggg",
+      "phone": "",
+      "passwordHash": "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4",
+      "role": "USER",
+      "grade": "GENERAL",
+      "status": "ACTIVE",
+      "createdAt": "2026-07-10T10:32:59.908Z"
+    },
+    {
+      "id": "U1013",
+      "email": "ffff@gmail.com",
+      "name": "ffff",
+      "phone": "",
+      "passwordHash": "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4",
+      "role": "USER",
+      "grade": "GENERAL",
+      "status": "ACTIVE",
+      "createdAt": "2026-07-12T00:39:09.469Z"
+    }
+  ],
+  "requests": [
+    {
+      "id": "YS-260712-005",
+      "userId": "U1013",
+      "createdAt": "2026-07-12T00:40:44.509Z",
+      "serviceType": "상품주문",
+      "name": "ffff",
+      "phone": "11111",
+      "originCountry": "GUCCI",
+      "originAddress": "구찌 구매대행 출고지",
+      "destinationCountry": "대한민국",
+      "destinationAddress": "경남 사천시 경남 사천시 주공1길 15 2222 (52550)",
+      "bagCount": 0,
+      "boxCount": 1,
+      "itemType": "구찌 / 벨트",
+      "productName": "구찌(Gucci)엠보싱 슬라이드 자동 버클 벨트폭(두께) 3.5cm",
+      "option": "기본 옵션",
+      "email": "ffff@gmail.com",
+      "postcode": "52550",
+      "paymentMethod": "무통장입금",
+      "customsCode": "p*********23",
+      "estimatedPrice": 66666,
+      "confirmedPrice": 66666,
+      "status": "배송완료",
+      "adminMemo": "",
+      "updatedAt": "2026-07-12T01:25:08.085Z"
+    },
+    {
+      "id": "YS-260711-004",
+      "userId": "GUEST",
+      "createdAt": "2026-07-11T02:09:18.488Z",
+      "serviceType": "상품주문",
+      "name": "ggg",
+      "phone": "11111",
+      "originCountry": "CHANEL",
+      "originAddress": "샤넬 구매대행 출고지",
+      "destinationCountry": "대한민국",
+      "destinationAddress": "경기 부천시 소사구 경기 부천시 소사구 경인옛로 3 3333 (14704)",
+      "bagCount": 0,
+      "boxCount": 1,
+      "itemType": "샤넬 / 가방",
+      "productName": "클래식 미디움 플랩 백",
+      "option": "기본 옵션",
+      "email": "",
+      "postcode": "14704",
+      "paymentMethod": "무통장입금",
+      "customsCode": "p**********11",
+      "estimatedPrice": 15780000,
+      "confirmedPrice": 15780000,
+      "status": "배송완료",
+      "adminMemo": "",
+      "updatedAt": "2026-07-12T00:41:05.600Z"
+    },
+    {
+      "id": "YS-260709-001",
+      "userId": "U1001",
+      "createdAt": "2026-07-09T09:24:00+09:00",
+      "serviceType": "배송대행",
+      "name": "김민지",
+      "phone": "010-2468-1357",
+      "originCountry": "미국",
+      "originAddress": "Los Angeles, CA 90015",
+      "destinationCountry": "대한민국",
+      "destinationAddress": "서울특별시 마포구 월드컵북로 00",
+      "bagCount": 2,
+      "boxCount": 1,
+      "itemType": "의류 및 생활용품",
+      "productName": "샤넬 클래식 미디움 플랩 백",
+      "option": "블랙 / Mini",
+      "customsCode": "P***********57",
+      "estimatedPrice": 168000,
+      "confirmedPrice": null,
+      "status": "배송완료",
+      "adminMemo": "",
+      "updatedAt": "2026-07-11T03:39:00.805Z"
+    },
+    {
+      "id": "YS-260708-002",
+      "userId": "U1002",
+      "createdAt": "2026-07-08T15:42:00+09:00",
+      "serviceType": "이삿짐대행",
+      "name": "이준호",
+      "phone": "010-9182-7731",
+      "originCountry": "영국",
+      "originAddress": "Camden, London NW1",
+      "destinationCountry": "대한민국",
+      "destinationAddress": "부산광역시 수영구 광안해변로 00",
+      "bagCount": 3,
+      "boxCount": 4,
+      "itemType": "도서, 의류, 주방용품",
+      "productName": "까르띠에 발롱 블루 워치",
+      "option": "실버 / 33mm",
+      "customsCode": "P***********12",
+      "estimatedPrice": 412000,
+      "confirmedPrice": 425000,
+      "status": "배송완료",
+      "adminMemo": "대형 박스 1개 추가 확인",
+      "updatedAt": "2026-07-11T03:39:03.798Z"
+    },
+    {
+      "id": "YS-260706-003",
+      "userId": "U1003",
+      "createdAt": "2026-07-06T11:10:00+09:00",
+      "serviceType": "배송대행",
+      "name": "박서연",
+      "phone": "010-5543-8820",
+      "originCountry": "일본",
+      "originAddress": "Shibuya-ku, Tokyo",
+      "destinationCountry": "대한민국",
+      "destinationAddress": "경기도 성남시 분당구 판교로 00",
+      "bagCount": 1,
+      "boxCount": 2,
+      "itemType": "의류 및 소형 가전",
+      "productName": "구찌 GG 마몽 미니 숄더백",
+      "option": "베이지 / Mini",
+      "customsCode": "P***********84",
+      "estimatedPrice": 137000,
+      "confirmedPrice": 137000,
+      "status": "배송완료",
+      "adminMemo": "7/7 현지 출고",
+      "updatedAt": "2026-07-11T03:39:06.369Z"
+    }
+  ],
+  "inquiries": [
+    {
+      "id": "Q1001",
+      "userId": "U1001",
+      "type": "배송문의",
+      "title": "개인통관고유부호 수정 요청합니다.",
+      "status": "답변대기",
+      "createdAt": "2026-07-09T14:20:00+09:00"
+    },
+    {
+      "id": "Q1002",
+      "userId": "U1002",
+      "type": "상품문의",
+      "title": "까르띠에 워치 배송 일정을 알고 싶어요.",
+      "status": "답변완료",
+      "createdAt": "2026-07-08T13:05:00+09:00"
+    },
+    {
+      "id": "Q1003",
+      "userId": "U1003",
+      "type": "반품문의",
+      "title": "반품 접수 상태를 확인하고 싶어요.",
+      "status": "답변대기",
+      "createdAt": "2026-07-07T11:42:00+09:00"
+    }
+  ],
+  "brands": [
+    {
+      "id": 1,
+      "koName": "에르메스",
+      "enName": "HERMÈS",
+      "logo": "",
+      "featured": true,
+      "order": 1
+    },
+    {
+      "id": 2,
+      "koName": "까르띠에",
+      "enName": "CARTIER",
+      "logo": "",
+      "featured": true,
+      "order": 2
+    },
+    {
+      "id": 3,
+      "koName": "샤넬",
+      "enName": "CHANEL",
+      "logo": "",
+      "featured": true,
+      "order": 3
+    },
+    {
+      "id": 4,
+      "koName": "발렌시아가",
+      "enName": "BALENCIAGA",
+      "logo": "",
+      "featured": true,
+      "order": 4
+    },
+    {
+      "id": 5,
+      "koName": "구찌",
+      "enName": "GUCCI",
+      "logo": "",
+      "featured": true,
+      "order": 5
+    },
+    {
+      "id": 6,
+      "koName": "티파니앤코",
+      "enName": "TIFFANY & CO.",
+      "logo": "",
+      "featured": true,
+      "order": 6
+    },
+    {
+      "id": 7,
+      "koName": "디올",
+      "enName": "DIOR",
+      "logo": "",
+      "featured": true,
+      "order": 7
+    },
+    {
+      "id": 8,
+      "koName": "고야드",
+      "enName": "GOYARD",
+      "logo": "",
+      "featured": true,
+      "order": 8
+    },
+    {
+      "id": 9,
+      "koName": "셀린느",
+      "enName": "CELINE",
+      "logo": "",
+      "featured": true,
+      "order": 9
+    },
+    {
+      "id": 10,
+      "koName": "루이비통",
+      "enName": "LOUIS VUITTON",
+      "logo": "",
+      "featured": true,
+      "order": 10
+    },
+    {
+      "id": 11,
+      "koName": "프라다",
+      "enName": "PRADA",
+      "logo": "",
+      "featured": true,
+      "order": 11
+    },
+    {
+      "id": 12,
+      "koName": "보테가베네타",
+      "enName": "BOTTEGA VENETA",
+      "logo": "",
+      "featured": true,
+      "order": 12
+    },
+    {
+      "id": 13,
+      "koName": "미우미우",
+      "enName": "MIUMIU",
+      "logo": "",
+      "featured": true,
+      "order": 13
+    }
+  ],
+  "products": [
+    {
+      "id": 12,
+      "brandId": 5,
+      "categoryId": 707,
+      "name": "구찌(Gucci)엠보싱 슬라이드 자동 버클 벨트폭(두께) 3.5cm",
+      "description": "구찌(Gucci)엠보싱 슬라이드 자동 버클 벨트폭(두께) 3.5cm",
+      "price": 66666,
+      "oldPrice": 66666,
+      "image": "/uploads/products/product-12-main-1-1783835226439-43298360220a.webp",
+      "images": {
+        "main": [
+          "/uploads/products/product-12-main-1-1783835226439-43298360220a.webp"
+        ],
+        "detail": [
+          "/uploads/products/product-12-detail-1-1783835226440-c15495f4f81f.webp",
+          "/uploads/products/product-12-detail-2-1783835226440-e7c6c9ddd036.webp",
+          "/uploads/products/product-12-detail-3-1783835226441-2e89c7a93cc5.webp",
+          "/uploads/products/product-12-detail-4-1783835226441-5076a416111d.webp",
+          "/uploads/products/product-12-detail-5-1783835226442-f0e6fa8e6160.webp",
+          "/uploads/products/product-12-detail-6-1783835226443-24008eed9803.webp"
+        ]
+      },
+      "singleProduct": true,
+      "options": [],
+      "status": "판매중",
+      "score": {
+        "realtime": 0,
+        "weekly": 0,
+        "monthly": 0
+      }
+    },
+    {
+      "id": 13,
+      "brandId": 5,
+      "categoryId": 707,
+      "name": "구찌(Gucci) 폭 4.0cm 가을·겨울(FW) 신상 사이즈 100 - 125cm",
+      "description": "구찌(Gucci) 폭 4.0cm 가을·겨울(FW) 신상 사이즈 100 - 125cm",
+      "price": 55555,
+      "oldPrice": 55555,
+      "image": "/uploads/products/1-jpg-1783834366869-4fa2d1c14137.webp",
+      "images": {
+        "main": [
+          "/uploads/products/1-jpg-1783834366869-4fa2d1c14137.webp"
+        ],
+        "detail": [
+          "/uploads/products/1-jpg-1783834370584-83fb1221680e.webp",
+          "/uploads/products/wsxc1783020860947-0-jpg-1783834370601-46e38b1a1dfb.webp",
+          "/uploads/products/wsxc1783020860947-1-jpg-1783834370774-da91ed923c80.webp",
+          "/uploads/products/wsxc1783020860947-2-jpg-1783834370805-3751745edc9f.webp",
+          "/uploads/products/wsxc1783020860947-3-jpg-1783834370900-968ff4cf124f.webp",
+          "/uploads/products/wsxc1783020860947-4-jpg-1783834370899-27fe66eb2e7f.webp",
+          "/uploads/products/wsxc1783020860947-5-jpg-1783834370912-09e623a0f28c.webp",
+          "/uploads/products/wsxc1783020860947-6-jpg-1783834370921-23c0f41bcb0d.webp",
+          "/uploads/products/wsxc1783020860947-7-jpg-1783834370938-9474c23c7d01.webp"
+        ]
+      },
+      "singleProduct": true,
+      "options": [],
+      "status": "판매중",
+      "score": {
+        "realtime": 0,
+        "weekly": 0,
+        "monthly": 0
+      },
+      "createdAt": "2026-07-12T05:33:04.814Z",
+      "updatedAt": "2026-07-12T05:33:04.814Z"
+    },
+    {
+      "id": 14,
+      "brandId": 5,
+      "categoryId": 707,
+      "name": "구찌(Gucci)5",
+      "description": "구찌(Gucci)5",
+      "price": 444444,
+      "oldPrice": 444444,
+      "image": "/uploads/products/1-jpg-1783834568816-5f029b7f39d6.webp",
+      "images": {
+        "main": [
+          "/uploads/products/1-jpg-1783834568816-5f029b7f39d6.webp"
+        ],
+        "detail": [
+          "/uploads/products/1-jpg-1783834573329-b9d7a39dae46.webp",
+          "/uploads/products/2-jpg-1783834573648-e1151da95438.webp",
+          "/uploads/products/3-jpg-1783834573649-08eddcd46b16.webp",
+          "/uploads/products/4-jpg-1783834573674-82132a6fa234.webp",
+          "/uploads/products/5-jpg-1783834573677-b54b29f6ac4e.webp",
+          "/uploads/products/6-jpg-1783834573676-c56a15493205.webp"
+        ]
+      },
+      "singleProduct": true,
+      "options": [],
+      "status": "판매중",
+      "score": {
+        "realtime": 0,
+        "weekly": 0,
+        "monthly": 0
+      },
+      "createdAt": "2026-07-12T05:36:24.494Z",
+      "updatedAt": "2026-07-12T05:36:24.494Z"
+    },
+    {
+      "id": 15,
+      "brandId": 3,
+      "categoryId": 303,
+      "name": "샤넬 No 5 LEau Red Edition 오드퍼퓸",
+      "description": "샤넬 No 5 LEau Red Edition 오드퍼퓸",
+      "price": 111111,
+      "oldPrice": 111111,
+      "image": "/uploads/products/o1cn01dmujbp1pk407zumlq-2211382821821-jpg-400x400--1783834814830-bd98380041e9.webp",
+      "images": {
+        "main": [
+          "/uploads/products/o1cn01dmujbp1pk407zumlq-2211382821821-jpg-400x400--1783834814830-bd98380041e9.webp"
+        ],
+        "detail": [
+          "/uploads/products/o1cn01dmujbp1pk407zumlq-2211382821821-jpg-400x400--1783834821436-b3fff0d42aaa.webp",
+          "/uploads/products/jpg-1783834821561-3b121b0e1479.webp",
+          "/uploads/products/jpg-1783834821629-42405a962ad3.webp",
+          "/uploads/products/2-jpg-1783834821704-b788832ebf35.webp"
+        ]
+      },
+      "singleProduct": true,
+      "options": [],
+      "status": "판매중",
+      "score": {
+        "realtime": 0,
+        "weekly": 0,
+        "monthly": 0
+      },
+      "createdAt": "2026-07-12T05:40:28.881Z",
+      "updatedAt": "2026-07-12T05:42:24.209Z"
+    },
+    {
+      "id": 16,
+      "brandId": 3,
+      "categoryId": 303,
+      "name": "샤넬 no.5 RED (limited Edition)",
+      "description": "샤넬 no.5 RED (limited Edition)",
+      "price": 5555555,
+      "oldPrice": 5555555,
+      "image": "/uploads/products/4423a85db3cb0d3b66d92758cdecf55-png-1783834887759-75b4d47ce905.webp",
+      "images": {
+        "main": [
+          "/uploads/products/4423a85db3cb0d3b66d92758cdecf55-png-1783834887759-75b4d47ce905.webp"
+        ],
+        "detail": [
+          "/uploads/products/4423a85db3cb0d3b66d92758cdecf55-png-1783834891889-b9b6c48373f6.webp",
+          "/uploads/products/jpg-1783834891902-b38cc9c61533.webp",
+          "/uploads/products/1-jpg-1783834891937-11445e4b3494.webp",
+          "/uploads/products/jpg-1783834891995-4ec696ce2371.webp",
+          "/uploads/products/jpg-1783834891994-a7b17c71500b.webp"
+        ]
+      },
+      "singleProduct": true,
+      "options": [],
+      "status": "판매중",
+      "score": {
+        "realtime": 0,
+        "weekly": 0,
+        "monthly": 0
+      },
+      "createdAt": "2026-07-12T05:41:39.705Z",
+      "updatedAt": "2026-07-12T05:41:39.705Z"
+    },
+    {
+      "id": 17,
+      "brandId": 3,
+      "categoryId": 303,
+      "name": "샤넬 블루 드 맨 오 드 뚜왈렛 100ml",
+      "description": "샤넬 블루 드 맨 오 드 뚜왈렛 100ml",
+      "price": 66666,
+      "oldPrice": 66666,
+      "image": "/uploads/products/ba-ed-b7-e7-b5-e5-bb-fe-b3-da-3-2-jpg-1783835719786-a311fdcac9b7.webp",
+      "images": {
+        "main": [
+          "/uploads/products/ba-ed-b7-e7-b5-e5-bb-fe-b3-da-3-2-jpg-1783835719786-a311fdcac9b7.webp"
+        ],
+        "detail": [
+          "/uploads/products/31-860-jpg-1783835725841-c24d9e2576c4.webp",
+          "/uploads/products/31-1000-jpg-1783835725844-14edf163efe3.webp",
+          "/uploads/products/31-jpg-1783835725975-22eb90117214.webp",
+          "/uploads/products/jpg-1783835725987-37991a44e67a.webp"
+        ]
+      },
+      "singleProduct": true,
+      "options": [],
+      "status": "판매중",
+      "score": {
+        "realtime": 0,
+        "weekly": 0,
+        "monthly": 0
+      },
+      "createdAt": "2026-07-12T05:55:33.450Z",
+      "updatedAt": "2026-07-12T05:55:33.450Z"
+    },
+    {
+      "id": 18,
+      "brandId": 5,
+      "categoryId": 504,
+      "name": "구찌(Gucci) 엠보싱(浮雕) 로고 핀 버클 레더 벨트 폭(두께) 4.0cm",
+      "description": "구찌(Gucci) 엠보싱(浮雕) 로고 핀 버클 레더 벨트 폭(두께) 4.0cm",
+      "price": 7777,
+      "oldPrice": 7777,
+      "image": "/uploads/products/1-jpg-1783836946639-b55e40c9d9f2.webp",
+      "images": {
+        "main": [
+          "/uploads/products/1-jpg-1783836946639-b55e40c9d9f2.webp"
+        ],
+        "detail": [
+          "/uploads/products/1-jpg-1783836950721-20748c184002.webp",
+          "/uploads/products/2-jpg-1783836950905-26a32973165b.webp",
+          "/uploads/products/3-jpg-1783836951036-dcc1c93e093c.webp",
+          "/uploads/products/4-jpg-1783836951033-b0c5638b02ad.webp",
+          "/uploads/products/5-jpg-1783836951031-9cea2b67e775.webp",
+          "/uploads/products/6-jpg-1783836951035-ebf83a7fa36a.webp"
+        ]
+      },
+      "singleProduct": true,
+      "options": [],
+      "status": "판매중",
+      "score": {
+        "realtime": 0,
+        "weekly": 0,
+        "monthly": 0
+      },
+      "createdAt": "2026-07-12T06:15:56.297Z",
+      "updatedAt": "2026-07-12T06:15:56.297Z"
+    },
+    {
+      "id": 19,
+      "brandId": 5,
+      "categoryId": 503,
+      "name": "구찌(Gucci) 로고 장식 클래식 엠보싱 벨트 폭(두께) 4.0cm",
+      "description": "구찌(Gucci) 로고 장식 클래식 엠보싱 벨트 폭(두께) 4.0cm",
+      "price": 7777,
+      "oldPrice": 7777,
+      "image": "/uploads/products/1-jpg-1783837751693-3011f78f6928.webp",
+      "images": {
+        "main": [
+          "/uploads/products/1-jpg-1783837751693-3011f78f6928.webp"
+        ],
+        "detail": [
+          "/uploads/products/1-jpg-1783837761237-f07aa349d6c0.webp",
+          "/uploads/products/2-jpg-1783837761240-cc119ac71028.webp",
+          "/uploads/products/3-jpg-1783837761364-29111b80c6fd.webp"
+        ]
+      },
+      "singleProduct": true,
+      "options": [],
+      "status": "판매중",
+      "score": {
+        "realtime": 0,
+        "weekly": 0,
+        "monthly": 0
+      },
+      "createdAt": "2026-07-12T06:29:32.585Z",
+      "updatedAt": "2026-07-12T06:29:32.585Z"
+    },
+    {
+      "id": 20,
+      "brandId": 3,
+      "categoryId": 303,
+      "name": "샤넬 알뤼르 옴므 스포츠 오드뚜왈렛50ml",
+      "description": "샤넬 알뤼르 옴므 스포츠 오드뚜왈렛50ml",
+      "price": 8888,
+      "oldPrice": 8888,
+      "image": "/uploads/products/jpg-1783838229341-a5692eeb41d8.webp",
+      "images": {
+        "main": [
+          "/uploads/products/jpg-1783838229341-a5692eeb41d8.webp"
+        ],
+        "detail": [
+          "/uploads/products/jpg-1783838239412-5f89b4c86845.webp",
+          "/uploads/products/jpg-1783838239415-f9fadd459801.webp"
+        ]
+      },
+      "singleProduct": true,
+      "options": [],
+      "status": "판매중",
+      "score": {
+        "realtime": 0,
+        "weekly": 0,
+        "monthly": 0
+      },
+      "createdAt": "2026-07-12T06:37:25.411Z",
+      "updatedAt": "2026-07-12T06:37:25.411Z"
+    },
+    {
+      "id": 21,
+      "brandId": 3,
+      "categoryId": 303,
+      "name": "아베크롬비 피어스 빈티지 퍼퓸 향수",
+      "description": "아베크롬비 피어스 빈티지 퍼퓸 향수",
+      "price": 88888,
+      "oldPrice": 88888,
+      "image": "/uploads/products/20220915-142409-jpg-1783838769612-159ec2305746.webp",
+      "images": {
+        "main": [
+          "/uploads/products/20220915-142409-jpg-1783838769612-159ec2305746.webp"
+        ],
+        "detail": [
+          "/uploads/products/20220915-142409-jpg-1783838774692-1ab6f0495c47.webp",
+          "/uploads/products/20220915-142426-jpg-1783838774729-e0826062f32c.webp",
+          "/uploads/products/23047799220865897-1243144174-jpg-1783838774780-1e9537621351.webp",
+          "/uploads/products/jpg-1783838774803-3148b47ba6a4.webp",
+          "/uploads/products/jpg-1783838774876-7dba4f44ec74.webp"
+        ]
+      },
+      "singleProduct": true,
+      "options": [],
+      "status": "판매중",
+      "score": {
+        "realtime": 0,
+        "weekly": 0,
+        "monthly": 0
+      },
+      "createdAt": "2026-07-12T06:46:24.680Z",
+      "updatedAt": "2026-07-12T06:46:24.680Z"
+    },
+    {
+      "id": 22,
+      "brandId": 9,
+      "categoryId": 706,
+      "name": "구찌(Gucci) 폭 2.0cm 30 최신 여성 벨트 사이즈 90 - 110cm 1",
+      "description": "구찌(Gucci) 폭 2.0cm 30 최신 여성 벨트 사이즈 90 - 110cm 1",
+      "price": 33333,
+      "oldPrice": 33333,
+      "image": "/uploads/products/1-jpg-1783851001958-8b3acf38cfd4.webp",
+      "images": {
+        "main": [
+          "/uploads/products/1-jpg-1783851001958-8b3acf38cfd4.webp",
+          "/uploads/products/wsxc1783019991240-0-jpg-1783851006048-70c294c341cd.webp",
+          "/uploads/products/wsxc1783019991240-1-jpg-1783851006047-ddddb7bbbd35.webp",
+          "/uploads/products/wsxc1783019991240-2-jpg-1783851006209-394e3dc829ec.webp"
+        ],
+        "detail": [
+          "/uploads/products/1-jpg-1783851014506-6755d35646fd.webp",
+          "/uploads/products/wsxc1783019991240-0-jpg-1783851014507-48baf67eb324.webp",
+          "/uploads/products/wsxc1783019991240-1-jpg-1783851014653-1029bacac52d.webp",
+          "/uploads/products/wsxc1783019991240-2-jpg-1783851014656-e5f49f647cc8.webp",
+          "/uploads/products/wsxc1783019991240-3-jpg-1783851014807-e83665e84269.webp",
+          "/uploads/products/wsxc1783019991240-4-jpg-1783851014811-11fa2007c4f0.webp",
+          "/uploads/products/wsxc1783019991240-5-jpg-1783851014953-cfd0fa5dc576.webp",
+          "/uploads/products/wsxc1783019991240-6-jpg-1783851014958-c434c152cfc0.webp"
+        ]
+      },
+      "singleProduct": true,
+      "options": [],
+      "status": "판매중",
+      "score": {
+        "realtime": 0,
+        "weekly": 0,
+        "monthly": 0
+      },
+      "createdAt": "2026-07-12T10:10:18.782Z",
+      "updatedAt": "2026-07-12T10:10:18.782Z"
+    },
+    {
+      "id": 23,
+      "brandId": 1,
+      "categoryId": 708,
+      "name": "에르메스 떼르 데르메스 오드뚜왈렛 EDT 50ml",
+      "description": "에르메스 떼르 데르메스 오드뚜왈렛 EDT 50ml",
+      "price": 66666,
+      "oldPrice": 66666,
+      "image": "/uploads/products/jpg-1783901824292-629af605a5d4.webp",
+      "images": {
+        "main": [
+          "/uploads/products/jpg-1783901824292-629af605a5d4.webp"
+        ],
+        "detail": [
+          "/uploads/products/jpg-1783901830214-eb0d7834d688.webp"
+        ]
+      },
+      "singleProduct": true,
+      "options": [],
+      "status": "판매중",
+      "score": {
+        "realtime": 0,
+        "weekly": 0,
+        "monthly": 0
+      },
+      "createdAt": "2026-07-13T00:17:13.925Z",
+      "updatedAt": "2026-07-13T00:17:13.925Z"
+    }
+  ],
+  "categories": [
+    {
+      "brandId": 1,
+      "items": [
+        {
+          "id": 101,
+          "name": "가방"
+        },
+        {
+          "id": 102,
+          "name": "지갑"
+        },
+        {
+          "id": 103,
+          "name": "스카프"
+        },
+        {
+          "id": 104,
+          "name": "팔찌"
+        },
+        {
+          "id": 705,
+          "name": "시계"
+        },
+        {
+          "id": 708,
+          "name": "향수"
+        }
+      ]
+    },
+    {
+      "brandId": 2,
+      "items": [
+        {
+          "id": 201,
+          "name": "시계"
+        },
+        {
+          "id": 202,
+          "name": "반지"
+        },
+        {
+          "id": 203,
+          "name": "팔찌"
+        },
+        {
+          "id": 204,
+          "name": "목걸이"
+        }
+      ]
+    },
+    {
+      "brandId": 3,
+      "items": [
+        {
+          "id": 301,
+          "name": "가방"
+        },
+        {
+          "id": 302,
+          "name": "주얼리"
+        },
+        {
+          "id": 303,
+          "name": "향수"
+        },
+        {
+          "id": 304,
+          "name": "슈즈"
+        }
+      ]
+    },
+    {
+      "brandId": 4,
+      "items": [
+        {
+          "id": 401,
+          "name": "가방"
+        },
+        {
+          "id": 402,
+          "name": "스니커즈"
+        },
+        {
+          "id": 403,
+          "name": "의류"
+        },
+        {
+          "id": 404,
+          "name": "액세서리"
+        }
+      ]
+    },
+    {
+      "brandId": 5,
+      "items": [
+        {
+          "id": 501,
+          "name": "가방"
+        },
+        {
+          "id": 502,
+          "name": "지갑"
+        },
+        {
+          "id": 503,
+          "name": "슈즈"
+        },
+        {
+          "id": 504,
+          "name": "액세서리"
+        },
+        {
+          "id": 707,
+          "name": "벨트"
+        }
+      ]
+    },
+    {
+      "brandId": 6,
+      "items": [
+        {
+          "id": 601,
+          "name": "반지"
+        },
+        {
+          "id": 602,
+          "name": "팔찌"
+        },
+        {
+          "id": 603,
+          "name": "목걸이"
+        },
+        {
+          "id": 604,
+          "name": "귀걸이"
+        }
+      ]
+    },
+    {
+      "brandId": 7,
+      "items": [
+        {
+          "id": 701,
+          "name": "가방"
+        },
+        {
+          "id": 702,
+          "name": "선글라스"
+        },
+        {
+          "id": 703,
+          "name": "주얼리"
+        },
+        {
+          "id": 704,
+          "name": "뷰티"
+        }
+      ]
+    },
+    {
+      "brandId": 9,
+      "items": [
+        {
+          "id": 706,
+          "name": "벨트"
+        }
+      ]
+    }
+  ],
+  "pricing": {
+    "baseFee": 35000,
+    "bagFee": 38000,
+    "boxFee": 52000,
+    "destinationSurcharges": {
+      "대한민국": 0,
+      "미국": 35000,
+      "일본": 18000,
+      "영국": 42000,
+      "프랑스": 42000,
+      "독일": 42000,
+      "호주": 48000,
+      "캐나다": 38000
+    }
+  },
+  "carts": [
+    {
+      "ownerId": "U1013",
+      "items": [
+        {
+          "id": "cart-1783901577559-r6rxc3",
+          "productId": 17,
+          "brandId": 3,
+          "brandName": "샤넬",
+          "name": "샤넬 블루 드 맨 오 드 뚜왈렛 100ml",
+          "price": 66666,
+          "image": "/uploads/products/ba-ed-b7-e7-b5-e5-bb-fe-b3-da-3-2-jpg-1783835719786-a311fdcac9b7.webp",
+          "optionIndex": "",
+          "optionLabel": "기본 옵션",
+          "quantity": 1,
+          "addedAt": "2026-07-13T00:12:57.559Z"
+        },
+        {
+          "id": "cart-1783855395926-rqrukv",
+          "productId": 13,
+          "brandId": 5,
+          "brandName": "구찌",
+          "name": "구찌(Gucci) 폭 4.0cm 가을·겨울(FW) 신상 사이즈 100 - 125cm",
+          "price": 55555,
+          "image": "/uploads/products/1-jpg-1783834366869-4fa2d1c14137.webp",
+          "optionIndex": "",
+          "optionLabel": "기본 옵션",
+          "quantity": 1,
+          "addedAt": "2026-07-12T11:23:15.926Z"
+        }
+      ],
+      "createdAt": "2026-07-12T10:49:32.256Z",
+      "updatedAt": "2026-07-13T00:50:04.910Z"
+    },
+    {
+      "ownerId": "guest-1783852509957-axybgbkl",
+      "items": [
+        {
+          "id": "cart-1783855395926-rqrukv",
+          "productId": 13,
+          "brandId": 5,
+          "brandName": "구찌",
+          "name": "구찌(Gucci) 폭 4.0cm 가을·겨울(FW) 신상 사이즈 100 - 125cm",
+          "price": 55555,
+          "image": "/uploads/products/1-jpg-1783834366869-4fa2d1c14137.webp",
+          "optionIndex": "",
+          "optionLabel": "기본 옵션",
+          "quantity": 1,
+          "addedAt": "2026-07-12T11:23:15.926Z"
+        },
+        {
+          "id": "cart-1783901577559-r6rxc3",
+          "productId": 17,
+          "brandId": 3,
+          "brandName": "샤넬",
+          "name": "샤넬 블루 드 맨 오 드 뚜왈렛 100ml",
+          "price": 66666,
+          "image": "/uploads/products/ba-ed-b7-e7-b5-e5-bb-fe-b3-da-3-2-jpg-1783835719786-a311fdcac9b7.webp",
+          "optionIndex": "",
+          "optionLabel": "기본 옵션",
+          "quantity": 1,
+          "addedAt": "2026-07-13T00:12:57.559Z"
+        }
+      ],
+      "createdAt": "2026-07-12T11:48:43.686Z",
+      "updatedAt": "2026-07-13T00:17:23.935Z"
+    }
+  ],
+  "wishlists": [
+    {
+      "ownerId": "U1013",
+      "items": [
+        {
+          "id": "wish-1783901576232-ufitcx",
+          "productId": 17,
+          "brandId": 3,
+          "brandName": "샤넬",
+          "name": "샤넬 블루 드 맨 오 드 뚜왈렛 100ml",
+          "price": 66666,
+          "image": "/uploads/products/ba-ed-b7-e7-b5-e5-bb-fe-b3-da-3-2-jpg-1783835719786-a311fdcac9b7.webp",
+          "addedAt": "2026-07-13T00:12:56.232Z"
+        },
+        {
+          "id": "wish-1783856066579-px2iaj",
+          "productId": 18,
+          "brandId": 5,
+          "brandName": "구찌",
+          "name": "구찌(Gucci) 엠보싱(浮雕) 로고 핀 버클 레더 벨트 폭(두께) 4.0cm",
+          "price": 7777,
+          "image": "/uploads/products/1-jpg-1783836946639-b55e40c9d9f2.webp",
+          "addedAt": "2026-07-12T11:34:26.579Z"
+        },
+        {
+          "id": "wish-1783853688996-pnklq9",
+          "productId": 14,
+          "brandId": 5,
+          "brandName": "구찌",
+          "name": "구찌(Gucci)5",
+          "price": 444444,
+          "image": "/uploads/products/1-jpg-1783834568816-5f029b7f39d6.webp",
+          "addedAt": "2026-07-12T10:54:48.996Z"
+        }
+      ],
+      "createdAt": "2026-07-12T10:35:09.959Z",
+      "updatedAt": "2026-07-13T00:50:04.912Z"
+    },
+    {
+      "ownerId": "guest-1783852509957-axybgbkl",
+      "items": [
+        {
+          "id": "wish-1783856066579-px2iaj",
+          "productId": 18,
+          "brandId": 5,
+          "brandName": "구찌",
+          "name": "구찌(Gucci) 엠보싱(浮雕) 로고 핀 버클 레더 벨트 폭(두께) 4.0cm",
+          "price": 7777,
+          "image": "/uploads/products/1-jpg-1783836946639-b55e40c9d9f2.webp",
+          "addedAt": "2026-07-12T11:34:26.579Z"
+        },
+        {
+          "id": "wish-1783854236090-h5zl2o",
+          "productId": 17,
+          "brandId": 3,
+          "brandName": "샤넬",
+          "name": "샤넬 블루 드 맨 오 드 뚜왈렛 100ml",
+          "price": 66666,
+          "image": "/uploads/products/ba-ed-b7-e7-b5-e5-bb-fe-b3-da-3-2-jpg-1783835719786-a311fdcac9b7.webp",
+          "addedAt": "2026-07-12T11:03:56.090Z"
+        },
+        {
+          "id": "wish-1783853688996-pnklq9",
+          "productId": 14,
+          "brandId": 5,
+          "brandName": "구찌",
+          "name": "구찌(Gucci)5",
+          "price": 444444,
+          "image": "/uploads/products/1-jpg-1783834568816-5f029b7f39d6.webp",
+          "addedAt": "2026-07-12T10:54:48.996Z"
+        }
+      ],
+      "createdAt": "2026-07-12T11:48:43.688Z",
+      "updatedAt": "2026-07-13T00:17:23.939Z"
+    }
+  ]
+}

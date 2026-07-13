@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>주문서 작성 | 윤슬마켓</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css">
+  <link rel="stylesheet" href="/style.css?v=20260712-mobile-header-left">
+  <link rel="stylesheet" href="/checkout.css?v=order-form-20260710">
+</head>
+<body>
+  <header class="lux-header">
+    <button class="mobile-menu" id="mobileMenu" aria-label="??">?</button>
+    <a class="lux-logo" href="/">윤슬마켓<small>YOONSEUL MARKET</small></a>
+    <nav class="main-nav" id="mainNav">
+      <a href="/#best">베스트</a><a href="/#all">전체상품</a>
+      <span class="featured-brand-nav" id="featuredBrandNav"></span>
+      <div class="more-menu"><button id="moreButton" type="button">더보기⌄</button><div class="more-brand-panel" id="moreBrandPanel" aria-label="전체 브랜드"></div></div>
+    </nav>
+    <div class="nav-actions">
+      <a class="login-button" id="memberJoinButton" href="/join">로그인</a>
+      <button class="logout-button" id="memberLogoutButton" type="button" hidden>로그아웃</button>
+      <a class="header-search-button" href="/#searchHero" aria-label="검색">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg>
+      </a>
+      <button class="cart-button" id="sharedCartButton" type="button" aria-label="장바구니">
+        <svg viewBox="0 0 24 24"><path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 7H6M10 20h.01M17 20h.01"/></svg><em id="sharedCartCount">0</em>
+      </button>
+    </div>
+  </header>
+  <div class="mobile-drawer-overlay" id="mobileDrawerOverlay"></div>
+  <aside class="mobile-category-drawer" id="mobileCategoryDrawer" aria-hidden="true">
+    <div class="mobile-drawer-head">
+      <div><strong>브랜드</strong><small>BRANDS</small></div>
+      <button id="mobileDrawerClose" type="button" aria-label="메뉴 닫기">×</button>
+    </div>
+    <nav class="mobile-brand-list" id="mobileBrandDrawerList" aria-label="모바일 브랜드 목록"></nav>
+    <div class="mobile-drawer-account" id="mobileDrawerAccount"></div>
+  </aside>
+
+  <main class="checkout-shell" id="checkoutApp">
+    <form class="checkout-form" id="checkoutForm">
+      <section class="form-section">
+        <div class="section-head">
+          <h2>배송</h2>
+          <p>통관 정보와 배송 주소가 정확히 일치해야 안전하게 출고됩니다.</p>
+        </div>
+        <label class="field full select-field">
+          <span>국가/지역</span>
+          <select name="destinationCountry" required>
+            <option value="대한민국">대한민국</option>
+            <option value="싱가포르">싱가포르</option>
+            <option value="미국">미국</option>
+            <option value="일본">일본</option>
+          </select>
+        </label>
+        <div class="form-grid two">
+          <label class="field">
+            <input name="name" placeholder="성명" autocomplete="name" required>
+          </label>
+          <label class="field">
+            <input name="receiverMemo" placeholder="이름 (선택 사항)">
+          </label>
+        </div>
+        <div class="address-row">
+          <label class="field locked-field">
+            <input name="postcode" placeholder="우편 번호 (주소 검색으로 자동 입력)" readonly required>
+          </label>
+          <button type="button" id="addressSearch">주소 검색</button>
+        </div>
+        <div class="form-grid two">
+          <label class="field select-field locked-field">
+            <span>시/도</span>
+            <select name="province" id="provinceSelect" required aria-readonly="true">
+              <option value="">주소 검색으로 자동 입력</option>
+              <option value="서울특별시">서울특별시</option>
+              <option value="부산광역시">부산광역시</option>
+              <option value="대구광역시">대구광역시</option>
+              <option value="인천광역시">인천광역시</option>
+              <option value="광주광역시">광주광역시</option>
+              <option value="대전광역시">대전광역시</option>
+              <option value="울산광역시">울산광역시</option>
+              <option value="세종특별자치시">세종특별자치시</option>
+              <option value="경기도">경기도</option>
+              <option value="강원특별자치도">강원특별자치도</option>
+              <option value="충청북도">충청북도</option>
+              <option value="충청남도">충청남도</option>
+              <option value="전북특별자치도">전북특별자치도</option>
+              <option value="전라남도">전라남도</option>
+              <option value="경상북도">경상북도</option>
+              <option value="경상남도">경상남도</option>
+              <option value="제주특별자치도">제주특별자치도</option>
+            </select>
+          </label>
+          <label class="field locked-field">
+            <input name="city" placeholder="구/군/시" readonly required>
+          </label>
+        </div>
+        <label class="field full locked-field">
+          <input name="addressBase" placeholder="주소" autocomplete="street-address" readonly required>
+        </label>
+        <label class="field full">
+          <input name="addressDetail" id="addressDetail" placeholder="상세 주소 (예: 동·호수)" required>
+        </label>
+        <label class="field full">
+          <input name="customsCode" placeholder="개인통관고유부호 입력" required>
+        </label>
+        <label class="field full">
+          <input name="phone" type="tel" placeholder="전화" autocomplete="tel" required>
+          <em>?</em>
+        </label>
+        <label class="check-line">
+          <input name="saveInfo" type="checkbox">
+          <span>다음을 위해 <b>이 정보를 저장</b></span>
+        </label>
+      </section>
+
+      <section class="form-section">
+        <div class="section-head">
+          <h2>배송 방법</h2>
+          <p>배송 안내</p>
+        </div>
+        <div class="delivery-placeholder">사용 가능한 배송 방법을 보려면 배송 주소를 입력하십시오.</div>
+      </section>
+
+      <section class="form-section">
+        <div class="section-head">
+          <h2>지급</h2>
+          <p>모든 거래는 안전하고 암호화되어 있습니다.</p>
+        </div>
+        <div class="payment-box" id="paymentBox"></div>
+        <button class="submit-order" id="submitOrder" type="submit">주문 완료</button>
+        <p class="form-message" id="formMessage" aria-live="polite"></p>
+      </section>
+    </form>
+
+    <aside class="order-summary">
+      <div class="summary-card">
+        <div class="summary-product">
+          <div class="summary-thumb">
+            <img id="summaryImage" alt="">
+            <span id="summaryQty">1</span>
+          </div>
+          <div>
+            <b id="summaryName">상품 정보를 불러오는 중</b>
+            <small id="summaryOption">기본 옵션</small>
+          </div>
+          <strong id="summaryPrice">₩0</strong>
+        </div>
+
+        <dl class="price-lines">
+          <div><dt>소계</dt><dd id="subtotalPrice">₩0</dd></div>
+          <div><dt>배송 <span>?</span></dt><dd>배송 주소 입력</dd></div>
+        </dl>
+
+        <div class="summary-total">
+          <span>총계</span>
+          <strong><em>KRW</em> <b id="totalPrice">₩0</b></strong>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <div class="checkout-toast" id="checkoutToast"></div>
+  <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+  <script src="/cart-utils.js"></script>
+  <script src="/shared-header.js?v=header-korean-20260712"></script>
+  <script src="/checkout.js?v=order-form-address-20260710"></script>
+  <script src="/shop-member-cart.js?v=header-korean-20260712"></script>
+</body>
+</html>
