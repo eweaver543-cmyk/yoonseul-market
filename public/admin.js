@@ -2120,7 +2120,12 @@ function closeSidebar() {
   document.querySelector("#sidebarOverlay").classList.remove("open");
 }
 
-document.querySelectorAll(".nav-item").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
+document.querySelectorAll(".nav-item").forEach((button) => button.addEventListener("click", async () => {
+  if (button.dataset.view === "reviews" && token) {
+    try { dashboardData = await adminApi("/api/admin/dashboard"); } catch (_) {}
+  }
+  switchView(button.dataset.view);
+}));
 document.querySelector("#mobileSidebarButton").addEventListener("click", openSidebar);
 document.querySelector("#sidebarOverlay").addEventListener("click", closeSidebar);
 document.querySelector("#logoutButton").addEventListener("click", () => {
@@ -2136,6 +2141,16 @@ async function refreshMemberData() {
     if (currentView === "members") switchView("members");
   } catch (_) {}
 }
+
+async function refreshReviewData() {
+  if (!token || currentView !== "reviews") return;
+  try {
+    dashboardData = await adminApi("/api/admin/dashboard");
+    switchView("reviews");
+  } catch (_) {}
+}
+
+setInterval(refreshReviewData, 15000);
 
 window.addEventListener("storage", (event) => {
   if (event.key === "yoonseulMembersUpdated") refreshMemberData();

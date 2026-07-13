@@ -643,6 +643,71 @@ async function handleApi(req, res, url) {
     return send(res, 200, { orders });
   }
 
+  if (url.pathname === "/api/member/reviews" && req.method === "GET") {
+    const userId = String(url.searchParams.get("userId") || "").trim();
+    const email = String(url.searchParams.get("email") || "").trim().toLowerCase();
+    const member = db.users.find((user) =>
+      String(user.id || "") === userId && String(user.email || "").trim().toLowerCase() === email
+    );
+    if (!member) return sendError(res, 404, "회원 정보를 찾을 수 없습니다.");
+    const reviews = (db.siteSettings.reviews || []).filter((review) => String(review.userId || "") === userId);
+    return send(res, 200, { reviews });
+  }
+
+  if (url.pathname === "/api/reviews" && req.method === "POST") {
+    const body = await readBody(req);
+    const userId = String(body.userId || "").trim();
+    const email = String(body.email || "").trim().toLowerCase();
+    const orderId = String(body.orderId || "").trim();
+    const content = String(body.content || "").trim();
+    const member = db.users.find((user) =>
+      String(user.id || "") === userId && String(user.email || "").trim().toLowerCase() === email
+    );
+    if (!member) return sendError(res, 401, "회원 로그인이 필요합니다.");
+    const order = db.requests.find((item) =>
+      String(item.id || "") === orderId && String(item.userId || "") === userId &&
+      String(item.email || "").trim().toLowerCase() === email
+    );
+    if (!order || order.status !== "배송완료") {
+      return sendError(res, 400, "배송완료된 본인 주문에 대해서만 리뷰를 작성할 수 있습니다.");
+    }
+    if (!content) return sendError(res, 400, "리뷰 내용을 입력해 주세요.");
+
+    const image = String(body.image || "");
+    if (image.length > 7_000_000) return sendError(res, 413, "리뷰 이미지는 5MB 이하로 등록해 주세요.");
+    db.siteSettings.reviews ||= [];
+    const existingIndex = db.siteSettings.reviews.findIndex((review) =>
+      String(review.orderId || "") === orderId && String(review.userId || "") === userId
+    );
+    const existing = existingIndex >= 0 ? db.siteSettings.reviews[existingIndex] : null;
+    const now = new Date().toISOString();
+    const review = {
+      id: existing?.id || `review-${Date.now()}-${crypto.randomBytes(3).toString("hex")}`,
+      orderId,
+      productId: Number(order.productId || body.productId || 0),
+      userId,
+      userName: member.name || member.email || "고객",
+      rating: Math.min(5, Math.max(1, Number(body.rating || 5))),
+      content,
+      image,
+      images: image ? [image] : [],
+      productName: order.productName || body.productName || order.itemType || "상품 정보",
+      option: order.option || body.option || "기본 옵션",
+      status: existing?.status || "published",
+      replyContent: existing?.replyContent || "",
+      repliedAt: existing?.repliedAt || "",
+      deliveryCompletedAt: order.updatedAt || order.createdAt,
+      isEligibleOrder: true,
+      createdAt: existing?.createdAt || now,
+      updatedAt: now
+    };
+    if (existingIndex >= 0) db.siteSettings.reviews[existingIndex] = review;
+    else db.siteSettings.reviews.unshift(review);
+    db.siteSettings.updatedAt = now;
+    writeDb(db);
+    return send(res, existing ? 200 : 201, review);
+  }
+
   if (url.pathname === "/api/members/register" && req.method === "POST") {
     const body = await readBody(req);
     const email = String(body.email || "").trim().toLowerCase();

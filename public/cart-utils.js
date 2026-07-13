@@ -365,10 +365,22 @@
     return getReviews().find((review) => review.orderId === orderId) || null;
   }
 
-  function upsertReview(review) {
+  async function saveReviewToServer(review, member = getCurrentMember()) {
+    if (!member?.id || !member?.email) throw new Error("회원 로그인이 필요합니다.");
+    const response = await fetch("/api/reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...review, userId: member.id, email: member.email })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "리뷰를 서버에 저장하지 못했습니다.");
+    return result;
+  }
+
+  async function upsertReview(review) {
     const items = getReviews();
     const existingIndex = items.findIndex((item) => item.orderId === review.orderId);
-    const nextItem = {
+    let nextItem = {
       id: review.id || `review-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       orderId: review.orderId,
       productId: Number(review.productId || 0),
@@ -389,11 +401,13 @@
       updatedAt: new Date().toISOString()
     };
 
+    nextItem = { ...nextItem, ...(await saveReviewToServer(nextItem)) };
+
     if (existingIndex >= 0) {
       items[existingIndex] = {
         ...items[existingIndex],
         ...nextItem,
-        id: items[existingIndex].id,
+        id: nextItem.id || items[existingIndex].id,
         createdAt: items[existingIndex].createdAt || nextItem.createdAt
       };
     } else {
@@ -401,6 +415,32 @@
     }
 
     return saveReviews(items);
+  }
+
+  async function hydrateMemberReviewsFromServer(member = getCurrentMember()) {
+    if (!member?.id || !member?.email) return [];
+    try {
+      const localReviews = getReviews();
+      const params = new URLSearchParams({ userId: member.id, email: member.email });
+      const response = await fetch(`/api/member/reviews?${params.toString()}`, { cache: "no-store" });
+      if (!response.ok) return localReviews.filter((review) => review.userId === member.id);
+      const payload = await response.json();
+      const serverReviews = Array.isArray(payload.reviews) ? payload.reviews : [];
+      const serverOrderIds = new Set(serverReviews.map((review) => String(review.orderId)));
+      const unsynced = localReviews.filter((review) =>
+        review.userId === member.id && !serverOrderIds.has(String(review.orderId))
+      );
+      for (const review of unsynced) {
+        try {
+          serverReviews.unshift(await saveReviewToServer(review, member));
+        } catch (_) {}
+      }
+      const unrelated = localReviews.filter((review) => review.userId !== member.id);
+      saveReviews([...serverReviews, ...unrelated]);
+      return serverReviews;
+    } catch (_) {
+      return getReviews().filter((review) => review.userId === member.id);
+    }
   }
 
   function updateReviewStatus(id, status) {
@@ -464,6 +504,7 @@
     getProductReviews,
     getOrderReview,
     upsertReview,
+    hydrateMemberReviewsFromServer,
     updateReviewStatus,
     updateReviewReply,
     deleteReview

@@ -447,21 +447,26 @@ function bindReviewEvents(member, orders) {
       ? (order?.createdAt || new Date().toISOString())
       : "";
 
-    mypageStore.upsertReview?.({
-      orderId: payload.orderId,
-      productId: payload.productId,
-      userId: member.id,
-      userName: member.name || member.email || "고객",
-      productName: payload.productName,
-      option: payload.option,
-      rating: Number(payload.rating || 5),
-      content: String(payload.content || "").trim(),
-      image: imageSource,
-      images: imageSource ? [imageSource] : [],
-      status: "published",
-      deliveryCompletedAt,
-      isEligibleOrder: canWriteReview(order)
-    });
+    try {
+      await mypageStore.upsertReview?.({
+        orderId: payload.orderId,
+        productId: payload.productId,
+        userId: member.id,
+        userName: member.name || member.email || "고객",
+        productName: payload.productName,
+        option: payload.option,
+        rating: Number(payload.rating || 5),
+        content: String(payload.content || "").trim(),
+        image: imageSource,
+        images: imageSource ? [imageSource] : [],
+        status: "published",
+        deliveryCompletedAt,
+        isEligibleOrder: canWriteReview(order)
+      });
+    } catch (error) {
+      message.textContent = error.message || "리뷰를 저장하지 못했습니다.";
+      return;
+    }
 
     closeReviewModal();
     renderMypage();
@@ -498,7 +503,12 @@ document.addEventListener("keydown", (event) => {
 async function refreshMemberOrders() {
   const member = mypageStore.getCurrentMember?.();
   await loadMypageCatalog();
-  if (member) await mypageStore.hydrateMemberOrdersFromServer?.(member);
+  if (member) {
+    await Promise.all([
+      mypageStore.hydrateMemberOrdersFromServer?.(member),
+      mypageStore.hydrateMemberReviewsFromServer?.(member)
+    ]);
+  }
   renderMypage();
 }
 
