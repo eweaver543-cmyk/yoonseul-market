@@ -768,14 +768,33 @@ async function handleApi(req, res, url) {
       return sendError(res, 400, "가방 또는 박스 수량을 1개 이상 입력해 주세요.");
     }
 
-    const customs = String(body.customsCode || "").trim();
+    const recipientName = String(body.name || "").trim().replace(/\s+/g, " ");
+    const phone = String(body.phone || "").replace(/\D/g, "");
+    const customs = String(body.customsCode || "").toUpperCase().replace(/[\s-]/g, "");
+    const koreanDestination = ["대한민국", "KR", "KOREA", "SOUTH KOREA"].includes(String(body.destinationCountry || "").trim().toUpperCase());
+    const isProductOrder = String(body.serviceType || "").trim() === "상품주문";
+    if (isProductOrder && (recipientName.length < 2 || recipientName.length > 50 || !/^[\p{L}\p{M}][\p{L}\p{M}\s.'·-]*[\p{L}\p{M}]$/u.test(recipientName))) {
+      return sendError(res, 400, "수취인 성명을 한글 또는 영문으로 정확히 입력해 주세요.");
+    }
+    if (isProductOrder && !/^P\d{12}$/.test(customs)) {
+      return sendError(res, 400, "개인통관고유부호는 P로 시작하는 13자리여야 합니다.");
+    }
+    if (isProductOrder && koreanDestination && !/^01[016789]\d{7,8}$/.test(phone)) {
+      return sendError(res, 400, "관세청에 등록된 국내 휴대전화번호를 확인해 주세요.");
+    }
+    if (isProductOrder && !koreanDestination && !/^\d{8,15}$/.test(phone)) {
+      return sendError(res, 400, "휴대전화번호 형식을 확인해 주세요.");
+    }
+    if (isProductOrder && body.customsMatchConfirmed !== true) {
+      return sendError(res, 400, "통관 정보 일치 확인이 필요합니다.");
+    }
     const request = {
       id: nextRequestId(db.requests),
       userId: body.userId || "GUEST",
       createdAt: new Date().toISOString(),
       serviceType: String(body.serviceType || "상품주문"),
-      name: String(body.name || "").trim(),
-      phone: String(body.phone || "").trim(),
+      name: recipientName,
+      phone,
       originCountry: String(body.originCountry || "").trim(),
       originAddress: String(body.originAddress || "").trim(),
       destinationCountry: String(body.destinationCountry || "").trim(),

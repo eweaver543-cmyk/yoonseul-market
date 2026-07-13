@@ -211,6 +211,63 @@ button {
   font-weight: 700;
 }
 
+.customs-notice {
+  padding: 15px 16px;
+  border: 1px solid #D8C59D;
+  background: #FFF9EC;
+  color: #433A2E;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.customs-notice strong {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 14px;
+}
+
+.customs-notice p {
+  margin: 0 0 6px;
+}
+
+.customs-notice a {
+  color: #805C19;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.customs-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 13px 14px;
+  border: 1px solid #D7D0C6;
+  background: #FFFDF9;
+  color: #35312D;
+  font-size: 13px;
+  line-height: 1.55;
+  cursor: pointer;
+}
+
+.customs-confirm input {
+  flex: 0 0 auto;
+  width: 17px;
+  height: 17px;
+  margin-top: 2px;
+  accent-color: var(--blue);
+}
+
+.customs-confirm b {
+  color: #A05249;
+}
+
+.field input.input-error,
+.customs-confirm.input-error {
+  border-color: #A05249;
+  box-shadow: 0 0 0 3px rgba(160, 82, 73, .12);
+}
+
 .delivery-placeholder {
   display: grid;
   place-items: center;

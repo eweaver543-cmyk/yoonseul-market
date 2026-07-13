@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css">
   <link rel="stylesheet" href="/style.css?v=20260712-mobile-header-left">
-  <link rel="stylesheet" href="/checkout.css?v=order-form-20260710">
+  <link rel="stylesheet" href="/checkout.css?v=customs-validation-20260713">
 </head>
 <body>
   <header class="lux-header">
@@ -59,7 +59,7 @@
         </label>
         <div class="form-grid two">
           <label class="field">
-            <input name="name" placeholder="성명" autocomplete="name" required>
+            <input name="name" placeholder="수취인 성명 (통관부호 등록 성명)" autocomplete="name" maxlength="50" required>
           </label>
           <label class="field">
             <input name="receiverMemo" placeholder="이름 (선택 사항)">
@@ -105,12 +105,21 @@
         <label class="field full">
           <input name="addressDetail" id="addressDetail" placeholder="상세 주소 (예: 동·호수)" required>
         </label>
+        <div class="customs-notice" id="customsNotice">
+          <strong>통관 정보 일치가 필요합니다</strong>
+          <p>수취인 성명, 휴대전화번호, 개인통관고유부호를 관세청에 등록된 정보와 똑같이 입력해 주세요.</p>
+          <a href="https://unipass.customs.go.kr/csp/persIndex.do" target="_blank" rel="noopener noreferrer">관세청에서 개인통관고유부호 조회하기 →</a>
+        </div>
         <label class="field full">
-          <input name="customsCode" placeholder="개인통관고유부호 입력" required>
+          <input name="customsCode" placeholder="개인통관고유부호 (P로 시작하는 13자리)" autocomplete="off" autocapitalize="characters" maxlength="13" aria-describedby="customsNotice" required>
         </label>
         <label class="field full">
-          <input name="phone" type="tel" placeholder="전화" autocomplete="tel" required>
+          <input name="phone" type="tel" placeholder="등록된 휴대전화번호 (예: 010-1234-5678)" autocomplete="tel" inputmode="tel" maxlength="15" aria-describedby="customsNotice" required>
           <em>?</em>
+        </label>
+        <label class="customs-confirm">
+          <input name="customsMatchConfirmed" type="checkbox" aria-required="true">
+          <span>수취인 성명·휴대전화번호·개인통관고유부호가 관세청 등록 정보와 모두 일치함을 확인했습니다. <b>(필수)</b></span>
         </label>
         <label class="check-line">
           <input name="saveInfo" type="checkbox">
@@ -168,7 +177,7 @@
   <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
   <script src="/cart-utils.js"></script>
   <script src="/shared-header.js?v=header-korean-20260712"></script>
-  <script src="/checkout.js?v=order-form-address-20260710"></script>
+  <script src="/checkout.js?v=customs-validation-20260713"></script>
   <script src="/shop-member-cart.js?v=header-korean-20260712"></script>
 </body>
 </html>

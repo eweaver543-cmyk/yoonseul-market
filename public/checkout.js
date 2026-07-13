@@ -192,6 +192,28 @@ function destinationAddressFrom(form) {
   ].filter(Boolean).join(" ");
 }
 
+function normalizeCustomsCode(value) {
+  return String(value || "").toUpperCase().replace(/[\s-]/g, "");
+}
+
+function normalizePhone(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+function isValidRecipientName(value) {
+  const name = String(value || "").trim().replace(/\s+/g, " ");
+  return name.length >= 2 && name.length <= 50 && /^[\p{L}\p{M}][\p{L}\p{M}\s.'·-]*[\p{L}\p{M}]$/u.test(name);
+}
+
+function isKoreanDestination(value) {
+  return ["대한민국", "KR", "KOREA", "SOUTH KOREA"].includes(String(value || "").trim().toUpperCase());
+}
+
+function markInvalid(control) {
+  control?.classList.add("input-error");
+  control?.focus();
+}
+
 function checkoutPayload(form) {
   const paymentMethod = new FormData(form).get("paymentMethod") || DEFAULT_PAYMENT_METHODS.bankLabel;
   const member = window.YoonseulCart?.getCurrentMember?.();
@@ -200,8 +222,8 @@ function checkoutPayload(form) {
     serviceType: "상품주문",
     userId: member?.id || "GUEST",
     email: member?.email || "",
-    name: form.elements.name.value.trim(),
-    phone: form.elements.phone.value.trim(),
+    name: form.elements.name.value.trim().replace(/\s+/g, " "),
+    phone: normalizePhone(form.elements.phone.value),
     originCountry: state.brand?.enName || "OVERSEAS",
     originAddress: `${state.brand?.koName || "해외 브랜드"} 구매대행 출고지`,
     destinationCountry: form.elements.destinationCountry.value,
@@ -216,7 +238,8 @@ function checkoutPayload(form) {
     option: state.optionLabel,
     quantity: state.quantity,
     image: productImage(state.product),
-    customsCode: form.elements.customsCode.value.trim(),
+    customsCode: normalizeCustomsCode(form.elements.customsCode.value),
+    customsMatchConfirmed: Boolean(form.elements.customsMatchConfirmed.checked),
     estimatedPrice: orderTotal(),
     confirmedPrice: orderTotal(),
     orderTotal: orderTotal(),
@@ -225,11 +248,35 @@ function checkoutPayload(form) {
 }
 
 function validateCheckout(form) {
+  form.querySelectorAll(".input-error").forEach((element) => element.classList.remove("input-error"));
   const required = ["name", "postcode", "province", "city", "addressBase", "addressDetail", "customsCode", "phone"];
   const missing = required.find((name) => !String(form.elements[name]?.value || "").trim());
   if (missing) {
-    form.elements[missing]?.focus();
+    markInvalid(form.elements[missing]);
     return "필수 배송 정보를 입력해 주세요.";
+  }
+  if (!isValidRecipientName(form.elements.name.value)) {
+    markInvalid(form.elements.name);
+    return "수취인 성명을 한글 또는 영문으로 정확히 입력해 주세요.";
+  }
+  const customsCode = normalizeCustomsCode(form.elements.customsCode.value);
+  form.elements.customsCode.value = customsCode;
+  if (!/^P\d{12}$/.test(customsCode)) {
+    markInvalid(form.elements.customsCode);
+    return "개인통관고유부호는 P로 시작하는 13자리로 입력해 주세요.";
+  }
+  const phone = normalizePhone(form.elements.phone.value);
+  if (isKoreanDestination(form.elements.destinationCountry.value) && !/^01[016789]\d{7,8}$/.test(phone)) {
+    markInvalid(form.elements.phone);
+    return "관세청에 등록된 국내 휴대전화번호를 정확히 입력해 주세요.";
+  }
+  if (!isKoreanDestination(form.elements.destinationCountry.value) && !/^\d{8,15}$/.test(phone)) {
+    markInvalid(form.elements.phone);
+    return "휴대전화번호를 숫자 8~15자리로 입력해 주세요.";
+  }
+  if (!form.elements.customsMatchConfirmed.checked) {
+    markInvalid(form.elements.customsMatchConfirmed.closest("label"));
+    return "성명·휴대전화번호·개인통관고유부호가 모두 일치하는지 확인해 주세요.";
   }
   if (!new FormData(form).get("paymentMethod")) {
     return "결제 수단을 선택해 주세요.";
@@ -314,6 +361,19 @@ document.querySelector("#provinceSelect")?.addEventListener("keydown", (event) =
   }
 });
 
+document.querySelector('[name="customsCode"]')?.addEventListener("input", (event) => {
+  event.currentTarget.value = normalizeCustomsCode(event.currentTarget.value);
+  event.currentTarget.classList.remove("input-error");
+});
+
+document.querySelector('[name="phone"]')?.addEventListener("input", (event) => {
+  event.currentTarget.classList.remove("input-error");
+});
+
+document.querySelector('[name="customsMatchConfirmed"]')?.addEventListener("change", (event) => {
+  event.currentTarget.closest("label")?.classList.remove("input-error");
+});
+
 document.querySelector("#checkoutForm")?.addEventListener("submit", async (event) => {
   event.preventDefault();
   const form = event.currentTarget;
@@ -365,9 +425,11 @@ document.querySelector("#checkoutForm")?.addEventListener("submit", async (event
     message.textContent = `주문이 접수되었습니다. 주문번호: ${result.id}`;
     showToast("주문이 정상 접수되었습니다.");
     submit.textContent = "주문 완료";
-  } catch (_) {
+  } catch (error) {
     message.style.color = "#A05249";
-    message.textContent = "주문 접수 중 문제가 발생했습니다. 입력 정보를 확인해 주세요.";
+    message.textContent = error.message && error.message !== "ORDER_FAILED"
+      ? error.message
+      : "주문 접수 중 문제가 발생했습니다. 입력 정보를 확인해 주세요.";
     showToast("주문 접수에 실패했습니다.");
     submit.disabled = false;
     submit.textContent = "주문 완료";
