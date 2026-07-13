@@ -61,6 +61,8 @@ function bindCartEvents() {
 function renderCartPage() {
   const items = cartStore.getCart();
   const total = cartTotal(items);
+  const member = cartStore.getCurrentMember();
+  const mypageUrl = member ? "/mypage.html" : "/join?returnTo=%2Fmypage.html";
 
   if (!items.length) {
     cartApp.innerHTML = `
@@ -92,14 +94,14 @@ function renderCartPage() {
     </section>
 
     <section class="summary-grid">
-      <article class="summary-card"><small>담긴 상품</small><strong>${items.length}</strong><span>옵션별로 구분되어 저장됩니다.</span></article>
-      <article class="summary-card"><small>총 수량</small><strong>${items.reduce((sum, item) => sum + Number(item.quantity || 0), 0)}</strong><span>수량 조절 후 바로 주문 가능합니다.</span></article>
-      <article class="summary-card"><small>예상 결제금액</small><strong>${won(total)}</strong><span>배송비와 추가 조건은 주문서에서 최종 확인됩니다.</span></article>
-      <article class="summary-card"><small>마이페이지</small><strong>${cartStore.getCurrentMember() ? "연동중" : "비회원"}</strong><span>${cartStore.getCurrentMember() ? "주문 내역과 찜한 상품을 확인할 수 있습니다." : "로그인하면 주문 내역이 마이페이지에 정리됩니다."}</span></article>
+      <a class="summary-card" href="#cart-items" aria-label="담긴 상품 목록으로 이동"><small>담긴 상품</small><strong>${items.length}</strong><span>옵션별로 구분되어 저장됩니다.</span></a>
+      <a class="summary-card" href="#cart-items" aria-label="수량 조절 목록으로 이동"><small>총 수량</small><strong>${items.reduce((sum, item) => sum + Number(item.quantity || 0), 0)}</strong><span>수량 조절 후 바로 주문 가능합니다.</span></a>
+      <a class="summary-card" href="#order-summary" aria-label="예상 결제금액 주문 요약으로 이동"><small>예상 결제금액</small><strong>${won(total)}</strong><span>배송비와 추가 조건은 주문서에서 최종 확인됩니다.</span></a>
+      <a class="summary-card" href="${mypageUrl}" aria-label="${member ? "마이페이지로 이동" : "로그인 후 마이페이지로 이동"}"><small>마이페이지</small><strong>${member ? "연동중" : "비회원"}</strong><span>${member ? "주문 내역과 찜한 상품을 확인할 수 있습니다." : "로그인하면 주문 내역이 마이페이지에 정리됩니다."}</span></a>
     </section>
 
     <section class="cart-layout">
-      <div class="content-card">
+      <div class="content-card" id="cart-items">
         <div class="content-card-head">
           <div><h2>담긴 상품 목록</h2><p>수량을 조절하거나 원하는 상품만 주문할 수 있습니다.</p></div>
         </div>
@@ -137,7 +139,7 @@ function renderCartPage() {
         </table>
       </div>
 
-      <aside class="content-card order-summary-card">
+      <aside class="content-card order-summary-card" id="order-summary">
         <div class="content-card-head">
           <div><h2>주문 요약</h2><p>현재 장바구니 기준 합계입니다.</p></div>
         </div>

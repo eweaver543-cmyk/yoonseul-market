@@ -105,7 +105,7 @@
   outline:none;
 }
 
-#recent-orders,#cart-preview,#wishlist-preview{scroll-margin-top:110px}
+#recent-orders,#cart-preview,#wishlist-preview,#cart-items,#order-summary{scroll-margin-top:110px}
 
 .summary-card small{
   display:block;
