@@ -153,42 +153,69 @@ document.querySelector("#loginForm").addEventListener("submit", async (event) =>
   startAdmin();
 });
 
+function isPendingInquiry(inquiry) {
+  return !["답변완료", "완료", "closed", "resolved"].includes(String(inquiry.status || "대기").toLowerCase());
+}
+
+function dashboardBadgeClass(status) {
+  if (status === "배송완료") return "paid";
+  if (status === "배송중") return "shipping";
+  return "ready";
+}
+
 function dashboardTemplate() {
+  const today = seoulDateKey();
+  const orders = [...dashboardData.requests].sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+  const todayOrders = orders.filter((order) => order.createdAt && seoulDateKey(order.createdAt) === today);
+  const todayRevenue = todayOrders
+    .filter((order) => order.status !== "취소/반품")
+    .reduce((sum, order) => sum + Number(order.confirmedPrice || order.estimatedPrice || 0), 0);
+  const todayMembers = dashboardData.users.filter((user) => user.createdAt && seoulDateKey(user.createdAt) === today);
+  const pendingInquiries = [...dashboardData.inquiries]
+    .filter(isPendingInquiry)
+    .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+  const byStatus = dashboardData.stats.byStatus || {};
+  const recentOrders = orders.slice(0, 3);
+  const recentInquiries = pendingInquiries.slice(0, 3);
+  const orderRows = recentOrders.length ? recentOrders.map((order) => `<tr>
+    <td>${safeHtml(order.id)}</td><td>${safeHtml(order.productName || order.itemType || "상품 정보")}</td>
+    <td>${safeHtml(order.name || order.email || "고객")}</td><td>₩${money(order.confirmedPrice || order.estimatedPrice)}</td>
+    <td><span class="dashboard-badge ${dashboardBadgeClass(order.status)}">${safeHtml(order.status || "입금대기")}</span></td>
+  </tr>`).join("") : `<tr><td colspan="5" class="dashboard-empty">아직 접수된 주문이 없습니다.</td></tr>`;
+  const inquiryRows = recentInquiries.length ? recentInquiries.map((inquiry) => `<tr>
+    <td><span class="inquiry-type">${safeHtml(inquiry.type || "1:1 문의")}</span></td>
+    <td>${safeHtml(inquiry.title || inquiry.content || "문의 내용")}</td>
+    <td>${safeHtml(inquiry.userName || inquiry.name || inquiry.email || "고객")}</td>
+    <td>${inquiry.createdAt ? dateText(inquiry.createdAt) : "-"}</td>
+  </tr>`).join("") : `<tr><td colspan="4" class="dashboard-empty">답변을 기다리는 문의가 없습니다.</td></tr>`;
+
   return `<div id="dashboard-section" class="dashboard-section">
     <div class="view-heading"><div><p>OVERVIEW</p><h2>대시보드</h2></div><button data-switch="products" data-open-product-editor="true"><i class="fa-solid fa-plus"></i> 새 상품 등록</button></div>
-    <section class="dashboard-welcome"><div><small>WELCOME BACK, ADMIN</small><h2>오늘의 윤슬마켓 현황입니다.</h2><p>매출과 주문, 고객 활동을 한눈에 확인하고 빠르게 처리하세요.</p></div><time><i class="fa-regular fa-calendar"></i>${new Intl.DateTimeFormat("ko-KR", { dateStyle: "long" }).format(new Date())}</time></section>
+    <section class="dashboard-welcome"><div><small>WELCOME BACK, ADMIN</small><h2>오늘의 윤슬마켓 현황입니다.</h2><p>홈페이지의 주문·회원·문의 데이터가 PC와 모바일 관리자 화면에 실시간 연동됩니다.</p></div><time><i class="fa-regular fa-calendar"></i>${new Intl.DateTimeFormat("ko-KR", { dateStyle: "long" }).format(new Date())}</time></section>
     <section class="kpi-grid">
-      <article class="kpi-card"><div class="kpi-icon"><i class="fa-solid fa-won-sign"></i></div><div><span>오늘 매출액</span><strong>₩14,500,000</strong><small>어제보다 12.5% 증가</small></div></article>
-      <article class="kpi-card"><div class="kpi-icon"><i class="fa-solid fa-bag-shopping"></i></div><div><span>신규 주문</span><strong>12<em>건</em></strong><small>확인할 주문이 있습니다</small></div></article>
-      <article class="kpi-card"><div class="kpi-icon"><i class="fa-solid fa-user-plus"></i></div><div><span>신규 가입</span><strong>8<em>명</em></strong><small>오늘 가입한 회원</small></div></article>
-      <article class="kpi-card highlight"><div class="kpi-icon"><i class="fa-solid fa-comment-dots"></i></div><div><span>미답변 1:1 문의</span><strong>3<em>건</em></strong><small>빠른 확인이 필요합니다</small></div></article>
+      <article class="kpi-card" data-switch="orders"><div class="kpi-icon"><i class="fa-solid fa-won-sign"></i></div><div><span>오늘 매출액</span><strong>₩${money(todayRevenue)}</strong><small>오늘 접수된 취소 제외 주문 기준</small></div></article>
+      <article class="kpi-card" data-switch="orders"><div class="kpi-icon"><i class="fa-solid fa-bag-shopping"></i></div><div><span>오늘 신규 주문</span><strong>${todayOrders.length}<em>건</em></strong><small>전체 주문 ${orders.length}건</small></div></article>
+      <article class="kpi-card" data-switch="members"><div class="kpi-icon"><i class="fa-solid fa-user-plus"></i></div><div><span>오늘 신규 가입</span><strong>${todayMembers.length}<em>명</em></strong><small>전체 회원 ${dashboardData.users.length}명</small></div></article>
+      <article class="kpi-card highlight" data-switch="inquiries"><div class="kpi-icon"><i class="fa-solid fa-comment-dots"></i></div><div><span>미답변 1:1 문의</span><strong>${pendingInquiries.length}<em>건</em></strong><small>${pendingInquiries.length ? "빠른 확인이 필요합니다" : "대기 중인 문의가 없습니다"}</small></div></article>
     </section>
     <section class="workflow-panel">
-      <div class="dashboard-section-head"><div><h3>실시간 주문 처리 단계</h3><p>현재 단계별 주문 현황입니다.</p></div><button data-switch="orders">주문 관리 바로가기 →</button></div>
+      <div class="dashboard-section-head"><div><h3>실시간 주문 처리 단계</h3><p>홈페이지 주문 상태와 동일한 현재 현황입니다.</p></div><button data-switch="orders">주문 관리 바로가기 →</button></div>
       <div class="workflow-steps">
-        <article><span class="workflow-icon"><i class="fa-solid fa-wallet"></i></span><div><small>STEP 01</small><b>입금 대기</b></div><strong>2</strong></article>
+        <article data-switch="orders" data-order-status="입금대기"><span class="workflow-icon"><i class="fa-solid fa-wallet"></i></span><div><small>STEP 01</small><b>입금 대기</b></div><strong>${Number(byStatus["입금대기"] || 0)}</strong></article>
         <i class="workflow-arrow fa-solid fa-chevron-right"></i>
-        <article><span class="workflow-icon"><i class="fa-solid fa-box"></i></span><div><small>STEP 02</small><b>배송 준비중</b></div><strong>5</strong></article>
+        <article data-switch="orders" data-order-status="배송준비중"><span class="workflow-icon"><i class="fa-solid fa-box"></i></span><div><small>STEP 02</small><b>배송 준비중</b></div><strong>${Number(byStatus["배송준비중"] || 0)}</strong></article>
         <i class="workflow-arrow fa-solid fa-chevron-right"></i>
-        <article><span class="workflow-icon"><i class="fa-solid fa-truck-fast"></i></span><div><small>STEP 03</small><b>배송중</b></div><strong>14</strong></article>
+        <article data-switch="orders" data-order-status="배송중"><span class="workflow-icon"><i class="fa-solid fa-truck-fast"></i></span><div><small>STEP 03</small><b>배송중</b></div><strong>${Number(byStatus["배송중"] || 0)}</strong></article>
         <i class="workflow-arrow fa-solid fa-chevron-right"></i>
-        <article class="attention"><span class="workflow-icon"><i class="fa-solid fa-rotate-left"></i></span><div><small>STEP 04</small><b>반품/교환 신청</b></div><strong>1</strong></article>
+        <article class="attention" data-switch="orders" data-order-status="취소/반품"><span class="workflow-icon"><i class="fa-solid fa-rotate-left"></i></span><div><small>STEP 04</small><b>취소/반품</b></div><strong>${Number(byStatus["취소/반품"] || 0)}</strong></article>
       </div>
     </section>
     <section class="activity-grid">
-      <article class="dashboard-table-card"><div class="dashboard-section-head"><div><h3>최근 주문 요약</h3><p>가장 최근 주문 3건입니다.</p></div><button data-switch="orders">전체보기 →</button></div>
-        <div class="table-wrap"><table class="summary-table"><thead><tr><th>주문번호</th><th>상품명</th><th>구매자</th><th>금액</th><th>상태</th></tr></thead><tbody>
-          <tr><td>20260709-01</td><td>샤넬 클래식 백</td><td>김윤슬</td><td>₩4,200,000</td><td><span class="dashboard-badge ready">배송준비</span></td></tr>
-          <tr><td>20260709-02</td><td>까르띠에 러브 링</td><td>박서연</td><td>₩2,180,000</td><td><span class="dashboard-badge paid">결제완료</span></td></tr>
-          <tr><td>20260709-03</td><td>티파니 T 브레이슬릿</td><td>이준호</td><td>₩3,980,000</td><td><span class="dashboard-badge shipping">배송중</span></td></tr>
-        </tbody></table></div>
+      <article class="dashboard-table-card"><div class="dashboard-section-head"><div><h3>최근 주문 요약</h3><p>서버에 접수된 가장 최근 주문 3건입니다.</p></div><button data-switch="orders">전체보기 →</button></div>
+        <div class="table-wrap"><table class="summary-table"><thead><tr><th>주문번호</th><th>상품명</th><th>구매자</th><th>금액</th><th>상태</th></tr></thead><tbody>${orderRows}</tbody></table></div>
       </article>
-      <article class="dashboard-table-card"><div class="dashboard-section-head"><div><h3>답변 대기 문의</h3><p>답변이 필요한 최근 문의입니다.</p></div><button data-switch="inquiries">문의 관리 →</button></div>
-        <div class="table-wrap"><table class="summary-table inquiry-table"><thead><tr><th>유형</th><th>제목</th><th>작성자</th><th>접수일시</th></tr></thead><tbody>
-          <tr><td><span class="inquiry-type">배송문의</span></td><td>개인통관고유부호 수정 요청합니다.</td><td>이회원</td><td>14:20</td></tr>
-          <tr><td><span class="inquiry-type">상품문의</span></td><td>샤넬 클래식 백 재입고 문의드립니다.</td><td>정고객</td><td>13:05</td></tr>
-          <tr><td><span class="inquiry-type">반품문의</span></td><td>반품 접수 상태를 확인하고 싶어요.</td><td>최회원</td><td>11:42</td></tr>
-        </tbody></table></div>
+      <article class="dashboard-table-card"><div class="dashboard-section-head"><div><h3>답변 대기 문의</h3><p>서버에 접수된 답변 필요 문의입니다.</p></div><button data-switch="inquiries">문의 관리 →</button></div>
+        <div class="table-wrap"><table class="summary-table inquiry-table"><thead><tr><th>유형</th><th>제목</th><th>작성자</th><th>접수일시</th></tr></thead><tbody>${inquiryRows}</tbody></table></div>
       </article>
     </section>
   </div>`;
@@ -1336,10 +1363,24 @@ function switchView(view) {
 }
 
 function bindDynamicEvents() {
-  document.querySelectorAll("[data-switch]").forEach((button) => button.addEventListener("click", () => {
-    switchView(button.dataset.switch);
-    if (button.dataset.openProductEditor === "true") openProductEditor();
-  }));
+  document.querySelectorAll("[data-switch]").forEach((button) => {
+    const activate = () => {
+      if (button.dataset.switch === "orders") activeOrderStatus = button.dataset.orderStatus || "";
+      switchView(button.dataset.switch);
+      if (button.dataset.openProductEditor === "true") openProductEditor();
+    };
+    button.addEventListener("click", activate);
+    if (button.tagName !== "BUTTON") {
+      button.setAttribute("role", "button");
+      button.setAttribute("tabindex", "0");
+      button.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          activate();
+        }
+      });
+    }
+  });
   document.querySelectorAll(".member-detail-button").forEach((button) => button.addEventListener("click", () => openMemberModal(button.dataset.member)));
   document.querySelector("#memberModalClose")?.addEventListener("click", closeMemberModal);
   document.querySelector("#memberModal")?.addEventListener("click", (event) => {
@@ -2121,7 +2162,7 @@ function closeSidebar() {
 }
 
 document.querySelectorAll(".nav-item").forEach((button) => button.addEventListener("click", async () => {
-  if (button.dataset.view === "reviews" && token) {
+  if (["dashboard", "reviews"].includes(button.dataset.view) && token) {
     try { dashboardData = await adminApi("/api/admin/dashboard"); } catch (_) {}
   }
   switchView(button.dataset.view);
@@ -2150,7 +2191,17 @@ async function refreshReviewData() {
   } catch (_) {}
 }
 
+async function refreshLiveDashboard() {
+  if (!token || currentView !== "dashboard") return;
+  try {
+    dashboardData = await adminApi("/api/admin/dashboard");
+    switchView("dashboard");
+  } catch (_) {}
+}
+
 setInterval(refreshReviewData, 15000);
+setInterval(refreshLiveDashboard, 15000);
+window.addEventListener("focus", refreshLiveDashboard);
 
 window.addEventListener("storage", (event) => {
   if (event.key === "yoonseulMembersUpdated") refreshMemberData();

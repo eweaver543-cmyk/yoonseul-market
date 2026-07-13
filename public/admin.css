@@ -123,3 +123,6 @@ html,body{font-size:14px;line-height:1.6}.admin-sidebar{width:270px;padding:30px
 .admin-review-reply-box p{margin:8px 0 0;color:#3B3734;font-size:14px;line-height:1.8}
 @media(max-width:1050px){.review-summary-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:760px){.review-summary-grid{grid-template-columns:1fr}.review-filter-tabs{padding:14px}.review-action-stack{grid-template-columns:1fr}.admin-review-detail h2,.admin-review-reply-form h2{font-size:24px}}
+.kpi-card[data-switch],.workflow-steps article[data-switch]{cursor:pointer;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.kpi-card[data-switch]:hover,.kpi-card[data-switch]:focus-visible,.workflow-steps article[data-switch]:hover,.workflow-steps article[data-switch]:focus-visible{transform:translateY(-2px);border-color:#D4B26F;box-shadow:0 12px 28px rgba(91,74,48,.12);outline:none}
+.dashboard-empty{text-align:center;color:#8A8178!important;padding:32px 16px!important}
