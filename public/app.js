@@ -225,7 +225,7 @@ function bindCardActions() {
   });
 }
 
-function randomBestProducts() {
+function randomBestProducts(excludedProductIds = [], limit = 8) {
   const candidates = products.filter((product) => hasProductDisplayImage(product) && !["삭제", "판매중지"].includes(String(product.status || "")));
   const signature = candidates.map((product) => Number(product.id)).sort((a, b) => a - b).join(",");
   if (signature !== randomBestSignature) {
@@ -236,7 +236,10 @@ function randomBestProducts() {
       [randomBestProductIds[index], randomBestProductIds[target]] = [randomBestProductIds[target], randomBestProductIds[index]];
     }
   }
-  return randomBestProductIds.slice(0, 8)
+  const excludedIds = new Set(excludedProductIds.map(Number));
+  return randomBestProductIds
+    .filter((id) => !excludedIds.has(Number(id)))
+    .slice(0, Math.max(0, Number(limit || 0)))
     .map((id) => products.find((product) => Number(product.id) === id))
     .filter(Boolean);
 }
@@ -245,17 +248,22 @@ function renderBest(type = activeRank) {
   activeRank = type;
   const ranking = Array.isArray(salesRankings[type]) ? salesRankings[type] : [];
   const ranked = ranking.map((sales) => ({ sales, product: products.find((product) => Number(product.id) === Number(sales.productId)) }))
-    .filter((entry) => entry.product && hasProductDisplayImage(entry.product));
-  const fallbackProducts = ranked.length ? [] : randomBestProducts();
+    .filter((entry) => entry.product && hasProductDisplayImage(entry.product))
+    .slice(0, 8);
+  const fallbackProducts = randomBestProducts(ranked.map((entry) => entry.product.id), 8 - ranked.length);
+  const bestCards = [
+    ...ranked.map((entry, index) => cardTemplate(entry.product, index + 1, entry.sales)),
+    ...fallbackProducts.map((product) => cardTemplate(product))
+  ];
   const description = document.querySelector("#bestPeriodDescription");
-  if (description) description.textContent = ranked.length
-    ? `${rankingPeriods[type] || "선택 기간"} 판매 수량 기준 · 10초마다 갱신`
-    : "판매 데이터가 쌓이는 동안 판매 상품을 랜덤으로 보여드립니다.";
-  document.querySelector("#bestGrid").innerHTML = ranked.length
-    ? ranked.map((entry, index) => cardTemplate(entry.product, index + 1, entry.sales)).join("")
-    : fallbackProducts.length
-      ? fallbackProducts.map((product) => cardTemplate(product)).join("")
-      : `<div class="best-empty-state"><strong>현재 노출할 판매 상품이 없습니다.</strong><span>관리자에서 판매 상품과 대표 이미지를 등록해 주세요.</span></div>`;
+  if (description) description.textContent = ranked.length && fallbackProducts.length
+    ? `${rankingPeriods[type] || "선택 기간"} 실제 판매순위 우선 · 부족한 상품은 임시 노출`
+    : ranked.length
+      ? `${rankingPeriods[type] || "선택 기간"} 판매 수량 기준 · 10초마다 갱신`
+      : "판매 데이터가 쌓이는 동안 판매 상품을 임시로 보여드립니다.";
+  document.querySelector("#bestGrid").innerHTML = bestCards.length
+    ? bestCards.join("")
+    : `<div class="best-empty-state"><strong>현재 노출할 판매 상품이 없습니다.</strong><span>관리자에서 판매 상품과 대표 이미지를 등록해 주세요.</span></div>`;
   bindCardActions();
 }
 
