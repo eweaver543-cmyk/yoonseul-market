@@ -277,6 +277,12 @@ function filteredProducts() {
     return brandMatch && categoryMatch && searchMatch;
   });
   const sort = document.querySelector("#sortSelect").value;
+  if (sort === "featured") {
+    result.sort((a, b) => {
+      const createdDifference = (Date.parse(b.createdAt || "") || 0) - (Date.parse(a.createdAt || "") || 0);
+      return createdDifference || Number(b.id || 0) - Number(a.id || 0);
+    });
+  }
   if (sort === "low") result.sort((a, b) => a.price - b.price);
   if (sort === "high") result.sort((a, b) => b.price - a.price);
   return result;
