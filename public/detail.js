@@ -14,6 +14,13 @@ const state = {
 const DETAIL_PREVIEW_KEY = "yoonseul-detail-preview";
 const CHECKOUT_SELECTION_KEY = "yoonseul-checkout-selection";
 
+function currentProductId() {
+  const queryId = Number(new URLSearchParams(location.search).get("id") || 0);
+  if (queryId) return queryId;
+  const pathMatch = location.pathname.match(/^\/product\/(\d+)(?:\/|$)/);
+  return Number(window.YOONSEUL_PRODUCT_ID || pathMatch?.[1] || 0);
+}
+
 const money = (value) => `\u20A9${Number(value || 0).toLocaleString("ko-KR")}`;
 
 const safeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({
@@ -387,7 +394,7 @@ function renderProduct() {
 }
 
 async function loadDetail() {
-  const id = new URLSearchParams(location.search).get("id");
+  const id = currentProductId();
   if (!id) throw new Error("NO_ID");
 
   let renderedPreview = false;

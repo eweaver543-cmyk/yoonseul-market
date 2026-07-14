@@ -57,6 +57,15 @@ const PRODUCT_PLACEHOLDER_IMAGE = "/images/product-placeholder.svg";
 const DETAIL_PREVIEW_KEY = "yoonseul-detail-preview";
 const productPrimaryImage = (product) => product.images?.main?.[0] || product.image || PRODUCT_PLACEHOLDER_IMAGE;
 const hasProductDisplayImage = (product) => Boolean(product?.images?.main?.[0] || product?.image);
+const productDetailUrl = (product) => {
+  const slug = String(product?.name || "product")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9가-힣]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 50) || "product";
+  return `/product/${Number(product?.id || 0)}/${encodeURIComponent(slug)}`;
+};
 
 const cartStore = () => window.YoonseulCart;
 
@@ -185,14 +194,16 @@ function syncHeaderMemberState() {
 
 function cardTemplate(product, rank, sales) {
   const brand = brandOf(product);
+  const detailUrl = productDetailUrl(product);
   return `<article class="product-card" data-product="${product.id}">
-    <div class="product-image"><img src="${productPrimaryImage(product)}" alt="${product.name}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${PRODUCT_PLACEHOLDER_IMAGE}'">${rank ? `<span class="rank-number">${rank}</span>` : ""}<button class="heart-button" data-wishlist="${product.id}" aria-label="${product.name} 찜하기">♡</button></div>
-    <div class="card-info"><small>${brand.enName}</small><h3>${product.name}</h3>${sales ? `<span class="sales-count">판매 ${Number(sales.units || 0).toLocaleString("ko-KR")}개 · 주문 ${Number(sales.orderCount || 0).toLocaleString("ko-KR")}건</span>` : ""}<strong>${won(product.price)}</strong><del>${won(product.oldPrice)}</del><button class="add-button" data-cart="${product.id}">장바구니 담기</button></div>
+    <div class="product-image"><a class="product-image-link" href="${detailUrl}" aria-label="${escapeHtml(product.name)} 상세보기"><img src="${escapeHtml(productPrimaryImage(product))}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${PRODUCT_PLACEHOLDER_IMAGE}'"></a>${rank ? `<span class="rank-number">${rank}</span>` : ""}<button class="heart-button" data-wishlist="${product.id}" aria-label="${escapeHtml(product.name)} 찜하기">♡</button></div>
+    <div class="card-info"><small>${escapeHtml(brand.enName)}</small><h3><a class="product-title-link" href="${detailUrl}">${escapeHtml(product.name)}</a></h3>${sales ? `<span class="sales-count">판매 ${Number(sales.units || 0).toLocaleString("ko-KR")}개 · 주문 ${Number(sales.orderCount || 0).toLocaleString("ko-KR")}건</span>` : ""}<strong>${won(product.price)}</strong><del>${won(product.oldPrice)}</del><button class="add-button" data-cart="${product.id}">장바구니 담기</button></div>
   </article>`;
 }
 
 function bindCardActions() {
-  document.querySelectorAll(".product-card").forEach((card) => card.addEventListener("click", () => {
+  document.querySelectorAll(".product-card").forEach((card) => card.addEventListener("click", (event) => {
+    if (event.target.closest("button")) return;
     const productId = card.dataset.product;
     if (!productId) return;
     const product = products.find((item) => Number(item.id) === Number(productId));
@@ -215,7 +226,7 @@ function bindCardActions() {
         preload.src = imageSource;
       }
     }
-    window.location.href = `/detail.html?id=${encodeURIComponent(productId)}`;
+    if (!event.target.closest("a")) window.location.href = product ? productDetailUrl(product) : `/detail.html?id=${encodeURIComponent(productId)}`;
   }));
   document.querySelectorAll("[data-wishlist]").forEach((button) => {
     const active = cartStore()?.isWishlisted?.(Number(button.dataset.wishlist));

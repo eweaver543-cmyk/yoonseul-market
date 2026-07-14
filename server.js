@@ -8,6 +8,7 @@ const sharp = require("sharp");
 const PORT = Number(process.env.PORT || 3000);
 const HOST = process.env.HOST || "0.0.0.0";
 const NODE_ENV = process.env.NODE_ENV || "development";
+const SITE_URL = String(process.env.SITE_URL || "https://yoonseulmarket.com").replace(/\/+$/, "");
 const ADMIN_EMAIL = String(process.env.ADMIN_EMAIL || "").trim();
 const ADMIN_PASSWORD = String(process.env.ADMIN_PASSWORD || "");
 const ADMIN_SESSION_SECRET = String(process.env.ADMIN_SESSION_SECRET || "");
@@ -344,6 +345,136 @@ function slugify(value = "") {
     .replace(/[^a-z0-9가-힣]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 50) || "item";
+}
+
+function escapeHtmlAttribute(value = "") {
+  return String(value).replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;"
+  })[character]);
+}
+
+function escapeXml(value = "") {
+  return escapeHtmlAttribute(value);
+}
+
+function productPublicPath(product) {
+  return `/product/${Number(product?.id || 0)}/${encodeURIComponent(slugify(product?.name || "product"))}`;
+}
+
+function absoluteSiteUrl(value = "/") {
+  try {
+    return new URL(String(value || "/"), `${SITE_URL}/`).href;
+  } catch {
+    return `${SITE_URL}/`;
+  }
+}
+
+function productPublicImages(product) {
+  const mainImages = Array.isArray(product?.images?.main) ? product.images.main : [];
+  return [...new Set([...mainImages, product?.image].map((item) => String(item || "").trim()).filter(Boolean))];
+}
+
+function productSeoDescription(product, brand) {
+  const rawDescription = String(product?.description || "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const fallback = `${brand?.koName || brand?.enName || "윤슬마켓"} ${product?.name || "상품"}의 가격, 옵션과 상세 이미지를 확인해 보세요.`;
+  return (rawDescription || fallback).slice(0, 160);
+}
+
+function productStructuredData(product, brand, description, canonicalUrl, imageUrls) {
+  const availability = String(product?.status || "") === "품절"
+    ? "https://schema.org/OutOfStock"
+    : "https://schema.org/InStock";
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: String(product?.name || "윤슬마켓 상품"),
+    description,
+    sku: `YS-P${Number(product?.id || 0)}`,
+    url: canonicalUrl,
+    brand: {
+      "@type": "Brand",
+      name: String(brand?.koName || brand?.enName || "윤슬마켓")
+    },
+    offers: {
+      "@type": "Offer",
+      url: canonicalUrl,
+      priceCurrency: "KRW",
+      price: Number(product?.price || 0),
+      availability
+    }
+  };
+  if (imageUrls.length) data.image = imageUrls;
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}
+
+function renderProductDetailHtml(db, product) {
+  const template = fs.readFileSync(path.join(PUBLIC_DIR, "detail.html"), "utf8");
+  const brand = db.brands.find((item) => Number(item.id) === Number(product.brandId));
+  const title = `${product.name} | 윤슬마켓`;
+  const description = productSeoDescription(product, brand);
+  const canonicalUrl = absoluteSiteUrl(productPublicPath(product));
+  const imageUrls = productPublicImages(product).map(absoluteSiteUrl);
+  const representativeImage = imageUrls[0] || absoluteSiteUrl("/images/product-placeholder.svg");
+  const structuredData = productStructuredData(product, brand, description, canonicalUrl, imageUrls);
+  const seoMarkup = `
+  <meta name="description" content="${escapeHtmlAttribute(description)}">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <link rel="canonical" href="${escapeHtmlAttribute(canonicalUrl)}">
+  <meta property="og:type" content="product">
+  <meta property="og:site_name" content="윤슬마켓">
+  <meta property="og:locale" content="ko_KR">
+  <meta property="og:title" content="${escapeHtmlAttribute(title)}">
+  <meta property="og:description" content="${escapeHtmlAttribute(description)}">
+  <meta property="og:url" content="${escapeHtmlAttribute(canonicalUrl)}">
+  <meta property="og:image" content="${escapeHtmlAttribute(representativeImage)}">
+  <meta property="product:price:amount" content="${Number(product.price || 0)}">
+  <meta property="product:price:currency" content="KRW">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${escapeHtmlAttribute(title)}">
+  <meta name="twitter:description" content="${escapeHtmlAttribute(description)}">
+  <meta name="twitter:image" content="${escapeHtmlAttribute(representativeImage)}">
+  <script>window.YOONSEUL_PRODUCT_ID=${Number(product.id)};</script>
+  <script type="application/ld+json">${structuredData}</script>`;
+  return template
+    .replace(/<title>[^<]*<\/title>/i, `<title>${escapeHtmlAttribute(title)}</title>`)
+    .replace("</head>", `${seoMarkup}\n</head>`);
+}
+
+function sitemapXml(db) {
+  const staticPages = [
+    { path: "/", priority: "1.0", frequency: "daily" },
+    { path: "/about", priority: "0.6", frequency: "monthly" },
+    { path: "/legal", priority: "0.3", frequency: "yearly" }
+  ];
+  const products = db.products.filter((product) => !["삭제", "판매중지"].includes(String(product.status || "")));
+  const urls = [
+    ...staticPages.map((page) => ({
+      loc: absoluteSiteUrl(page.path),
+      changefreq: page.frequency,
+      priority: page.priority
+    })),
+    ...products.map((product) => ({
+      loc: absoluteSiteUrl(productPublicPath(product)),
+      lastmod: String(product.updatedAt || product.createdAt || "").slice(0, 10),
+      changefreq: "weekly",
+      priority: "0.8"
+    }))
+  ];
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.map((item) => `  <url>
+    <loc>${escapeXml(item.loc)}</loc>${item.lastmod ? `\n    <lastmod>${escapeXml(item.lastmod)}</lastmod>` : ""}
+    <changefreq>${item.changefreq}</changefreq>
+    <priority>${item.priority}</priority>
+  </url>`).join("\n")}
+</urlset>`;
 }
 
 function extFromMime(mime = "") {
@@ -1385,6 +1516,34 @@ function resolveRoute(pathname) {
 }
 
 function serveStatic(req, res, url) {
+  if (url.pathname === "/robots.txt") {
+    return send(res, 200, `User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: ${absoluteSiteUrl("/sitemap.xml")}
+`, "text/plain; charset=utf-8", { "Cache-Control": "public, max-age=3600" });
+  }
+
+  if (url.pathname === "/sitemap.xml") {
+    return send(res, 200, sitemapXml(readDb()), "application/xml; charset=utf-8", { "Cache-Control": "public, max-age=300" });
+  }
+
+  const productRoute = url.pathname.match(/^\/product\/(\d+)(?:\/[^/]*)?\/?$/);
+  const isLegacyProductRoute = ["/detail", "/detail.html"].includes(url.pathname);
+  const legacyProductId = isLegacyProductRoute
+    ? Number(url.searchParams.get("id") || 0)
+    : 0;
+  const requestedProductId = Number(productRoute?.[1] || legacyProductId || 0);
+  if (productRoute || isLegacyProductRoute) {
+    const db = readDb();
+    const product = db.products.find((item) => Number(item.id) === requestedProductId && !["삭제", "판매중지"].includes(String(item.status || "")));
+    if (!product) {
+      return send(res, 404, "상품을 찾을 수 없습니다.", "text/plain; charset=utf-8", { "X-Robots-Tag": "noindex" });
+    }
+    return send(res, 200, renderProductDetailHtml(db, product), "text/html; charset=utf-8");
+  }
+
   if (url.pathname.startsWith("/uploads/")) {
     const uploadFilePath = path.normalize(path.join(UPLOAD_DIR, url.pathname.replace(/^\/uploads\/?/, "")));
     if (!uploadFilePath.startsWith(UPLOAD_DIR)) {
@@ -1416,12 +1575,14 @@ function serveStatic(req, res, url) {
     const type = mimeTypes[ext] || "application/octet-stream";
     const isHtml = ext === ".html";
     const isUiAsset = [".js", ".css", ".json"].includes(ext);
+    const noindexPages = new Set(["/admin.html", "/join.html", "/mypage.html", "/cart.html", "/checkout.html", "/apply.html"]);
+    const extraHeaders = noindexPages.has(safeTarget) ? { "X-Robots-Tag": "noindex, nofollow" } : {};
     send(
       res,
       200,
       data,
       type,
-      isHtml || isUiAsset ? {} : { "Cache-Control": "public, max-age=86400, immutable" }
+      isHtml || isUiAsset ? extraHeaders : { "Cache-Control": "public, max-age=86400, immutable", ...extraHeaders }
     );
   });
 }

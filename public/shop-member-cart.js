@@ -2,6 +2,12 @@
   const store = () => window.YoonseulCart;
   let catalogCache = null;
 
+  function currentDetailProductId() {
+    const queryId = Number(new URLSearchParams(location.search).get("id") || 0);
+    const pathMatch = location.pathname.match(/^\/product\/(\d+)(?:\/|$)/);
+    return Number(queryId || window.YOONSEUL_PRODUCT_ID || pathMatch?.[1] || 0);
+  }
+
   async function loadCatalog() {
     if (catalogCache) return catalogCache;
     const response = await fetch("/api/catalog");
@@ -58,7 +64,7 @@
     });
 
     const detailButton = document.querySelector("#wishButton");
-    const detailProductId = Number(new URLSearchParams(location.search).get("id") || 0);
+    const detailProductId = currentDetailProductId();
     if (detailButton && detailProductId) {
       const active = store()?.isWishlisted?.(detailProductId) || fallbackIsWishlisted(detailProductId);
       detailButton.classList.toggle("active", Boolean(active));
@@ -197,7 +203,7 @@
     detailButton.addEventListener("click", async (event) => {
       event.preventDefault();
       event.stopImmediatePropagation();
-      const productId = Number(new URLSearchParams(location.search).get("id") || 0);
+      const productId = currentDetailProductId();
       if (!productId) return;
       const catalog = await loadCatalog();
       const product = (catalog.products || []).find((item) => Number(item.id) === productId);
@@ -231,7 +237,7 @@
     detailButton.addEventListener("click", async (event) => {
       event.preventDefault();
       event.stopImmediatePropagation();
-      const productId = Number(new URLSearchParams(location.search).get("id") || 0);
+      const productId = currentDetailProductId();
       if (!productId) return;
       const active = await toggleCatalogWishlist(productId);
       if (active !== null && typeof window.showToast === "function") {

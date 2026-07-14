@@ -872,3 +872,4 @@ body{padding-top:82px}
   }
 }
 .heart-button.active{background:#D4B26F!important;color:#2C2A29!important;box-shadow:0 10px 24px rgba(171,135,70,.22)}
+.product-image-link{display:block;width:100%;height:100%;color:inherit;text-decoration:none}.product-title-link{color:inherit;text-decoration:none}.product-title-link:hover{text-decoration:underline;text-underline-offset:3px}
