@@ -488,7 +488,7 @@ function normalizeProductImages(images, fallbackImage = "", productName = "produ
 function normalizeOptions(options) {
   return Array.isArray(options)
     ? options
-        .slice(0, 200)
+        .slice(0, 400)
         .map((option) => ({
           color: String(option?.color || "").trim(),
           size: String(option?.size || "").trim()

@@ -5,7 +5,10 @@ const state = {
   images: [],
   activeImage: 0,
   quantity: 1,
-  selectedOption: ""
+  selectedOption: "",
+  selectedOptionIndex: -1,
+  selectedColor: "",
+  selectedSize: ""
 };
 
 const money = (value) => `\u20A9${Number(value || 0).toLocaleString("ko-KR")}`;
@@ -97,25 +100,62 @@ function renderGallery() {
 
 function renderOptions() {
   const optionBox = document.querySelector("#optionBox");
-  const optionSelect = document.querySelector("#optionSelect");
   const options = Array.isArray(state.product.options) ? state.product.options : [];
 
   if (!options.length) {
     optionBox.hidden = true;
     state.selectedOption = "";
+    state.selectedOptionIndex = -1;
     return;
   }
 
+  const colors = [...new Set(options.map((option) => String(option.color || "").trim()).filter(Boolean))];
+  const sizes = [...new Set(options.map((option) => String(option.size || "").trim()).filter(Boolean))];
+  state.selectedColor = "";
+  state.selectedSize = "";
+  state.selectedOption = "";
+  state.selectedOptionIndex = -1;
   optionBox.hidden = false;
-  optionSelect.innerHTML = `<option value="">옵션을 선택해 주세요</option>` + options.map((option, index) => {
-    const label = getOptionLabel(option);
-    return `<option value="${index}">${safeHtml(label)}</option>`;
-  }).join("");
+  const renderChoiceGroup = (type, values) => {
+    const group = document.querySelector(`#${type}OptionGroup`);
+    const list = document.querySelector(`#${type}OptionChoices`);
+    group.hidden = values.length === 0;
+    list.innerHTML = values.map((value) => `<button type="button" data-option-type="${type}" data-option-value="${safeHtml(value)}">${safeHtml(value)}</button>`).join("");
+  };
+  renderChoiceGroup("color", colors);
+  renderChoiceGroup("size", sizes);
 
-  optionSelect.addEventListener("change", () => {
-    const option = options[Number(optionSelect.value)];
-    state.selectedOption = option ? getOptionLabel(option) : "";
-  });
+  const updateSelection = () => {
+    document.querySelectorAll('[data-option-type="color"]').forEach((button) => button.classList.toggle("active", button.dataset.optionValue === state.selectedColor));
+    document.querySelectorAll('[data-option-type="size"]').forEach((button) => button.classList.toggle("active", button.dataset.optionValue === state.selectedSize));
+    const complete = (!colors.length || state.selectedColor) && (!sizes.length || state.selectedSize);
+    const index = complete ? options.findIndex((option) =>
+      (!colors.length || String(option.color || "") === state.selectedColor) &&
+      (!sizes.length || String(option.size || "") === state.selectedSize)
+    ) : -1;
+    state.selectedOptionIndex = index;
+    state.selectedOption = index >= 0 ? getOptionLabel(options[index]) : "";
+    const summary = document.querySelector("#selectedOptionSummary");
+    summary.textContent = state.selectedOption
+      ? `선택 옵션: ${state.selectedOption}`
+      : [colors.length && "색상", sizes.length && "사이즈"].filter(Boolean).join("과 ") + "를 선택해 주세요.";
+    summary.classList.toggle("selected", Boolean(state.selectedOption));
+  };
+
+  document.querySelectorAll("[data-option-type]").forEach((button) => button.addEventListener("click", () => {
+    if (button.dataset.optionType === "color") state.selectedColor = button.dataset.optionValue || "";
+    if (button.dataset.optionType === "size") state.selectedSize = button.dataset.optionValue || "";
+    updateSelection();
+  }));
+  updateSelection();
+}
+
+function focusMissingOption() {
+  if (!state.selectedColor && !document.querySelector("#colorOptionGroup")?.hidden) {
+    document.querySelector('#colorOptionChoices button')?.focus();
+    return;
+  }
+  document.querySelector('#sizeOptionChoices button')?.focus();
 }
 
 function renderDetailImages() {
@@ -295,15 +335,14 @@ document.querySelector("#buyButton").addEventListener("click", () => {
   const hasOptions = Array.isArray(state.product?.options) && state.product.options.length > 0;
   if (hasOptions && !state.selectedOption) {
     showToast("옵션을 먼저 선택해 주세요.");
-    document.querySelector("#optionSelect")?.focus();
+    focusMissingOption();
     return;
   }
-  const optionSelect = document.querySelector("#optionSelect");
   const params = new URLSearchParams({
     id: state.product.id,
     qty: state.quantity
   });
-  if (optionSelect && optionSelect.value !== "") params.set("option", optionSelect.value);
+  if (state.selectedOptionIndex >= 0) params.set("option", state.selectedOptionIndex);
   window.location.href = `/checkout.html?${params.toString()}`;
 });
 
@@ -319,7 +358,7 @@ document.querySelector("#cartButton").addEventListener("click", () => {
   const hasOptions = Array.isArray(state.product?.options) && state.product.options.length > 0;
   if (hasOptions && !state.selectedOption) {
     showToast("옵션을 먼저 선택해 주세요.");
-    document.querySelector("#optionSelect")?.focus();
+    focusMissingOption();
     return;
   }
 
@@ -330,6 +369,7 @@ document.querySelector("#cartButton").addEventListener("click", () => {
     name: state.product.name,
     price: Number(state.product.price || 0),
     image: state.images[0] || "",
+    optionIndex: state.selectedOptionIndex >= 0 ? state.selectedOptionIndex : "",
     optionLabel: state.selectedOption || "기본 옵션",
     quantity: state.quantity
   });

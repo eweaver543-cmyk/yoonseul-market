@@ -336,13 +336,13 @@ function productsTemplate() {
           </div>
         </section>
         <section class="product-form-section product-option-section">
-          <div class="form-section-heading"><div><span>02</span><div><h4>상품 옵션</h4><p>색상과 사이즈를 입력한 뒤 Enter를 누르면 조합 목록이 자동 생성됩니다.</p></div></div><strong id="optionCombinationCount">조합 0개</strong></div>
+          <div class="form-section-heading"><div><span>02</span><div><h4>상품 옵션</h4><p>색상과 사이즈를 각각 입력하면 고객이 홈페이지에서 따로 선택할 수 있습니다.</p></div></div><strong id="optionCombinationCount">색상 0 · 사이즈 0</strong></div>
           <div class="option-tag-inputs">
             <div><label for="colorTagInput">색상</label><div class="tag-input-box"><div id="colorTags" class="option-tags"></div><input id="colorTagInput" placeholder="예: 블랙 + Enter" autocomplete="off"></div></div>
             <div><label for="sizeTagInput">사이즈</label><div class="tag-input-box"><div id="sizeTags" class="option-tags"></div><input id="sizeTagInput" placeholder="예: M + Enter" autocomplete="off"></div></div>
           </div>
           <div class="option-table-wrap">
-            <table class="option-matrix simple"><thead><tr><th>옵션명 (색상 / 사이즈)</th></tr></thead><tbody id="optionMatrixBody"><tr class="option-empty-row"><td>색상 또는 사이즈 태그를 추가하면 등록 가능한 옵션명이 생성됩니다.</td></tr></tbody></table>
+            <table class="option-matrix simple"><thead><tr><th>홈페이지 선택 옵션</th></tr></thead><tbody id="optionMatrixBody"><tr class="option-empty-row"><td>색상 또는 사이즈를 추가하면 이곳에 항목별로 정리됩니다.</td></tr></tbody></table>
           </div>
         </section>
         <div class="product-submit-actions"><button class="form-submit" id="productSubmitButton" type="submit">상품 등록 완료</button></div>
@@ -2063,17 +2063,17 @@ function buildProductOptionsPayload() {
 function renderOptionMatrix() {
   const body = document.querySelector("#optionMatrixBody");
   if (!body) return;
-  const combinations = optionCombinations();
-  document.querySelector("#optionCombinationCount").textContent = `조합 ${combinations.length}개`;
-  if (!combinations.length) {
-    body.innerHTML = `<tr class="option-empty-row"><td>옵션이 없는 단품 상품은 현재 상태 그대로 바로 등록할 수 있습니다. 색상이나 사이즈를 추가하면 옵션 조합이 자동 생성됩니다.</td></tr>`;
+  const colorCount = productOptionTags.colors.length;
+  const sizeCount = productOptionTags.sizes.length;
+  document.querySelector("#optionCombinationCount").textContent = `색상 ${colorCount} · 사이즈 ${sizeCount}`;
+  if (!colorCount && !sizeCount) {
+    body.innerHTML = `<tr class="option-empty-row"><td>옵션이 없는 단품 상품은 현재 상태 그대로 등록할 수 있습니다.</td></tr>`;
     return;
   }
-  body.innerHTML = combinations.map(({ color, size, key }) => {
-    const label = [color, size].filter(Boolean).join(" / ");
-    const safeLabel = safeHtml(label);
-    return `<tr><td><strong>${safeLabel}</strong></td></tr>`;
-  }).join("");
+  body.innerHTML = [
+    colorCount ? `<tr class="option-summary-row"><td><strong>색상</strong><div class="option-summary-values">${productOptionTags.colors.map((value) => `<span>${safeHtml(value)}</span>`).join("")}</div></td></tr>` : "",
+    sizeCount ? `<tr class="option-summary-row"><td><strong>사이즈</strong><div class="option-summary-values">${productOptionTags.sizes.map((value) => `<span>${safeHtml(value)}</span>`).join("")}</div></td></tr>` : ""
+  ].join("");
 }
 
 async function saveProduct(event) {
