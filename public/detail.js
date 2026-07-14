@@ -5,13 +5,14 @@ const state = {
   images: [],
   activeImage: 0,
   quantity: 1,
-  selectedOption: "",
-  selectedOptionIndex: -1,
   selectedColor: "",
-  selectedSize: ""
+  selectedSize: "",
+  selectedItems: [],
+  optionProductId: null
 };
 
 const DETAIL_PREVIEW_KEY = "yoonseul-detail-preview";
+const CHECKOUT_SELECTION_KEY = "yoonseul-checkout-selection";
 
 const money = (value) => `\u20A9${Number(value || 0).toLocaleString("ko-KR")}`;
 
@@ -62,7 +63,10 @@ function formatReviewDate(value) {
 }
 
 function updateTotal() {
-  const total = Number(state.product?.price || 0) * state.quantity;
+  const hasOptions = Array.isArray(state.product?.options) && state.product.options.length > 0;
+  const selectedQuantity = state.selectedItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  const quantity = hasOptions ? selectedQuantity : state.quantity;
+  const total = Number(state.product?.price || 0) * quantity;
   document.querySelector("#quantityValue").textContent = state.quantity;
   document.querySelector("#totalPrice").textContent = money(total);
 }
@@ -102,62 +106,144 @@ function renderGallery() {
 
 function renderOptions() {
   const optionBox = document.querySelector("#optionBox");
+  const baseQuantityRow = document.querySelector("#baseQuantityRow");
   const options = Array.isArray(state.product.options) ? state.product.options : [];
 
   if (!options.length) {
     optionBox.hidden = true;
-    state.selectedOption = "";
-    state.selectedOptionIndex = -1;
+    baseQuantityRow.hidden = false;
+    state.selectedItems = [];
+    state.optionProductId = state.product.id;
     return;
   }
 
   const colors = [...new Set(options.map((option) => String(option.color || "").trim()).filter(Boolean))];
   const sizes = [...new Set(options.map((option) => String(option.size || "").trim()).filter(Boolean))];
+  if (Number(state.optionProductId) !== Number(state.product.id)) {
+    state.selectedItems = [];
+    state.optionProductId = state.product.id;
+  } else {
+    state.selectedItems = state.selectedItems
+      .filter((item) => options[item.optionIndex])
+      .map((item) => ({ ...item, label: getOptionLabel(options[item.optionIndex]) }));
+  }
   state.selectedColor = "";
   state.selectedSize = "";
-  state.selectedOption = "";
-  state.selectedOptionIndex = -1;
   optionBox.hidden = false;
-  const renderChoiceGroup = (type, values) => {
-    const group = document.querySelector(`#${type}OptionGroup`);
-    const list = document.querySelector(`#${type}OptionChoices`);
-    group.hidden = values.length === 0;
-    list.innerHTML = values.map((value) => `<button type="button" data-option-type="${type}" data-option-value="${safeHtml(value)}">${safeHtml(value)}</button>`).join("");
-  };
-  renderChoiceGroup("color", colors);
-  renderChoiceGroup("size", sizes);
+  baseQuantityRow.hidden = true;
 
-  const updateSelection = () => {
-    document.querySelectorAll('[data-option-type="color"]').forEach((button) => button.classList.toggle("active", button.dataset.optionValue === state.selectedColor));
-    document.querySelectorAll('[data-option-type="size"]').forEach((button) => button.classList.toggle("active", button.dataset.optionValue === state.selectedSize));
-    const complete = (!colors.length || state.selectedColor) && (!sizes.length || state.selectedSize);
-    const index = complete ? options.findIndex((option) =>
-      (!colors.length || String(option.color || "") === state.selectedColor) &&
-      (!sizes.length || String(option.size || "") === state.selectedSize)
-    ) : -1;
-    state.selectedOptionIndex = index;
-    state.selectedOption = index >= 0 ? getOptionLabel(options[index]) : "";
-    const summary = document.querySelector("#selectedOptionSummary");
-    summary.textContent = state.selectedOption
-      ? `선택 옵션: ${state.selectedOption}`
-      : [colors.length && "색상", sizes.length && "사이즈"].filter(Boolean).join("과 ") + "를 선택해 주세요.";
-    summary.classList.toggle("selected", Boolean(state.selectedOption));
+  const colorGroup = document.querySelector("#colorOptionGroup");
+  const sizeGroup = document.querySelector("#sizeOptionGroup");
+  const colorSelect = document.querySelector("#colorOptionSelect");
+  const sizeSelect = document.querySelector("#sizeOptionSelect");
+  const sizeLabel = document.querySelector("#sizeOptionLabel");
+  const summary = document.querySelector("#selectedOptionSummary");
+
+  colorGroup.hidden = colors.length === 0;
+  colorSelect.innerHTML = `<option value="">색상을 선택해 주세요</option>${colors.map((color) => `<option value="${safeHtml(color)}">${safeHtml(color)}</option>`).join("")}`;
+  sizeGroup.hidden = colors.length > 0 && sizes.length === 0;
+  sizeLabel.textContent = sizes.length ? "사이즈" : "옵션";
+
+  const setSizeChoices = (color = "") => {
+    const candidates = options
+      .map((option, optionIndex) => ({ option, optionIndex }))
+      .filter(({ option }) => !colors.length || String(option.color || "").trim() === color);
+    const prompt = colors.length && !color
+      ? "색상을 먼저 선택해 주세요"
+      : sizes.length ? "사이즈를 선택해 주세요" : "옵션을 선택해 주세요";
+    sizeSelect.innerHTML = `<option value="">${prompt}</option>${candidates.map(({ option, optionIndex }) => {
+      const label = sizes.length ? String(option.size || "").trim() : getOptionLabel(option);
+      return `<option value="${optionIndex}">${safeHtml(label)}</option>`;
+    }).join("")}`;
+    sizeSelect.disabled = Boolean(colors.length && !color);
   };
 
-  document.querySelectorAll("[data-option-type]").forEach((button) => button.addEventListener("click", () => {
-    if (button.dataset.optionType === "color") state.selectedColor = button.dataset.optionValue || "";
-    if (button.dataset.optionType === "size") state.selectedSize = button.dataset.optionValue || "";
-    updateSelection();
-  }));
-  updateSelection();
+  const renderSelectedItems = () => {
+    const list = document.querySelector("#selectedOptionList");
+    list.hidden = state.selectedItems.length === 0;
+    list.innerHTML = state.selectedItems.map((item) => `
+      <article class="selected-option-item" data-selected-option="${item.optionIndex}">
+        <div class="selected-option-head">
+          <strong>${safeHtml(item.label)}</strong>
+          <button type="button" class="selected-option-remove" data-option-remove="${item.optionIndex}" aria-label="${safeHtml(item.label)} 옵션 삭제">×</button>
+        </div>
+        <div class="selected-option-controls">
+          <div class="quantity-control" aria-label="${safeHtml(item.label)} 수량 조절">
+            <button type="button" data-option-minus="${item.optionIndex}" aria-label="수량 감소">−</button>
+            <output>${item.quantity}</output>
+            <button type="button" data-option-plus="${item.optionIndex}" aria-label="수량 증가">+</button>
+          </div>
+          <strong>${money(Number(state.product.price || 0) * Number(item.quantity || 1))}</strong>
+        </div>
+      </article>
+    `).join("");
+    summary.textContent = state.selectedItems.length
+      ? `선택한 옵션 ${state.selectedItems.length}개 · 수량은 아래에서 조절할 수 있습니다.`
+      : colors.length ? "색상을 먼저 선택한 후 사이즈를 선택해 주세요." : "옵션을 선택해 주세요.";
+    summary.classList.toggle("selected", state.selectedItems.length > 0);
+    list.querySelectorAll("[data-option-minus]").forEach((button) => button.addEventListener("click", () => {
+      const item = state.selectedItems.find((entry) => entry.optionIndex === Number(button.dataset.optionMinus));
+      if (item) item.quantity = Math.max(1, Number(item.quantity || 1) - 1);
+      renderSelectedItems();
+      updateTotal();
+    }));
+    list.querySelectorAll("[data-option-plus]").forEach((button) => button.addEventListener("click", () => {
+      const item = state.selectedItems.find((entry) => entry.optionIndex === Number(button.dataset.optionPlus));
+      if (item) item.quantity = Math.min(999, Number(item.quantity || 1) + 1);
+      renderSelectedItems();
+      updateTotal();
+    }));
+    list.querySelectorAll("[data-option-remove]").forEach((button) => button.addEventListener("click", () => {
+      state.selectedItems = state.selectedItems.filter((entry) => entry.optionIndex !== Number(button.dataset.optionRemove));
+      renderSelectedItems();
+      updateTotal();
+    }));
+  };
+
+  const addOption = (optionIndex) => {
+    const index = Number(optionIndex);
+    const option = options[index];
+    if (!option) return;
+    const existing = state.selectedItems.find((item) => item.optionIndex === index);
+    if (existing) {
+      showToast("이미 선택한 옵션입니다. 아래에서 수량을 조절해 주세요.");
+      document.querySelector(`[data-selected-option="${index}"]`)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    } else {
+      state.selectedItems.push({ optionIndex: index, label: getOptionLabel(option), quantity: 1 });
+      renderSelectedItems();
+      updateTotal();
+    }
+    sizeSelect.value = "";
+  };
+
+  colorSelect.addEventListener("change", () => {
+    state.selectedColor = colorSelect.value;
+    state.selectedSize = "";
+    setSizeChoices(state.selectedColor);
+    if (state.selectedColor && !sizes.length) {
+      const index = options.findIndex((option) => String(option.color || "").trim() === state.selectedColor);
+      addOption(index);
+    } else if (!sizeSelect.disabled) {
+      sizeSelect.focus();
+    }
+  });
+  sizeSelect.addEventListener("change", () => {
+    if (sizeSelect.value === "") return;
+    const index = Number(sizeSelect.value);
+    state.selectedSize = String(options[index]?.size || "").trim();
+    addOption(index);
+  });
+
+  setSizeChoices("");
+  renderSelectedItems();
 }
 
 function focusMissingOption() {
-  if (!state.selectedColor && !document.querySelector("#colorOptionGroup")?.hidden) {
-    document.querySelector('#colorOptionChoices button')?.focus();
+  if (!document.querySelector("#colorOptionGroup")?.hidden && !document.querySelector("#colorOptionSelect")?.value) {
+    document.querySelector("#colorOptionSelect")?.focus();
     return;
   }
-  document.querySelector('#sizeOptionChoices button')?.focus();
+  document.querySelector("#sizeOptionSelect")?.focus();
 }
 
 function renderDetailImages() {
@@ -361,18 +447,38 @@ document.querySelector("#quantityPlus").addEventListener("click", () => {
   updateTotal();
 });
 
+function purchaseSelections() {
+  const hasOptions = Array.isArray(state.product?.options) && state.product.options.length > 0;
+  if (hasOptions) return state.selectedItems.map((item) => ({ ...item }));
+  return [{ optionIndex: -1, label: "기본 옵션", quantity: state.quantity }];
+}
+
 document.querySelector("#buyButton").addEventListener("click", () => {
   const hasOptions = Array.isArray(state.product?.options) && state.product.options.length > 0;
-  if (hasOptions && !state.selectedOption) {
+  const selections = purchaseSelections();
+  if (hasOptions && !selections.length) {
     showToast("옵션을 먼저 선택해 주세요.");
     focusMissingOption();
     return;
   }
+  const totalQuantity = selections.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
   const params = new URLSearchParams({
     id: state.product.id,
-    qty: state.quantity
+    qty: totalQuantity
   });
-  if (state.selectedOptionIndex >= 0) params.set("option", state.selectedOptionIndex);
+  if (hasOptions) {
+    try {
+      sessionStorage.setItem(CHECKOUT_SELECTION_KEY, JSON.stringify({
+        savedAt: Date.now(),
+        productId: state.product.id,
+        selections
+      }));
+      params.set("selection", "detail");
+    } catch {
+      params.set("option", selections[0].optionIndex);
+      params.set("qty", selections[0].quantity);
+    }
+  }
   window.location.href = `/checkout.html?${params.toString()}`;
 });
 
@@ -386,24 +492,30 @@ document.querySelector("#chatButton").addEventListener("click", () => {
 });
 document.querySelector("#cartButton").addEventListener("click", () => {
   const hasOptions = Array.isArray(state.product?.options) && state.product.options.length > 0;
-  if (hasOptions && !state.selectedOption) {
+  const selections = purchaseSelections();
+  if (hasOptions && !selections.length) {
     showToast("옵션을 먼저 선택해 주세요.");
     focusMissingOption();
     return;
   }
 
-  window.YoonseulCart?.addCartItem?.({
-    productId: state.product.id,
-    brandId: state.product.brandId,
-    brandName: state.brand?.koName || "",
-    name: state.product.name,
-    price: Number(state.product.price || 0),
-    image: state.images[0] || "",
-    optionIndex: state.selectedOptionIndex >= 0 ? state.selectedOptionIndex : "",
-    optionLabel: state.selectedOption || "기본 옵션",
-    quantity: state.quantity
-  });
-  showToast("장바구니에 담았습니다.");
+  const cartItems = selections.map((selection) => ({
+      productId: state.product.id,
+      brandId: state.product.brandId,
+      brandName: state.brand?.koName || "",
+      name: state.product.name,
+      price: Number(state.product.price || 0),
+      image: state.images[0] || "",
+      optionIndex: selection.optionIndex >= 0 ? selection.optionIndex : "",
+      optionLabel: selection.label || "기본 옵션",
+      quantity: selection.quantity
+    }));
+  if (window.YoonseulCart?.addCartItems) {
+    window.YoonseulCart.addCartItems(cartItems);
+  } else {
+    cartItems.forEach((item) => window.YoonseulCart?.addCartItem?.(item));
+  }
+  showToast(hasOptions ? `선택한 옵션 ${selections.length}개를 장바구니에 담았습니다.` : "장바구니에 담았습니다.");
 });
 
 window.addEventListener("storage", (event) => {

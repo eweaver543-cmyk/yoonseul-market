@@ -424,6 +424,28 @@ a {
   position: relative;
 }
 
+.option-select-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.option-select-field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.option-select-field > span:first-child {
+  color: #68615B;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.option-select-field[hidden] {
+  display: none !important;
+}
+
 .custom-select select {
   width: 100%;
   min-height: 50px;
@@ -451,6 +473,13 @@ a {
   background: #fff;
 }
 
+.custom-select select:disabled {
+  border-color: #E6E0D8;
+  background: #F4F1EC;
+  color: #A39B92;
+  cursor: not-allowed;
+}
+
 .custom-select i {
   position: absolute;
   right: 16px;
@@ -459,6 +488,84 @@ a {
   color: #94897D;
   pointer-events: none;
   font-size: 13px;
+}
+
+.option-select-guide {
+  grid-column: 2;
+  margin: 12px 0 0;
+  padding: 11px 13px;
+  border-radius: 7px;
+  background: #F4F1EA;
+  color: #81786F;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.option-select-guide.selected {
+  background: #F1E6D2;
+  color: #755A2F;
+  font-weight: 750;
+}
+
+.selected-option-list {
+  grid-column: 2;
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.selected-option-item {
+  border: 1px solid #DED4C6;
+  border-radius: 9px;
+  background: #FFFDF9;
+  padding: 14px;
+}
+
+.selected-option-head,
+.selected-option-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.selected-option-head {
+  padding-bottom: 12px;
+  border-bottom: 1px solid #EEE7DD;
+}
+
+.selected-option-head > strong {
+  color: #2C2A29;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.selected-option-remove {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: #F4F1EA;
+  color: #746C64;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.selected-option-controls {
+  padding-top: 12px;
+}
+
+.selected-option-controls .quantity-control {
+  grid-template-columns: 38px 46px 38px;
+  min-height: 40px;
+}
+
+.selected-option-controls > strong {
+  color: #141312;
+  font-family: Inter, "Noto Sans KR", sans-serif;
+  font-size: 15px;
 }
 
 .quantity-row {
@@ -944,6 +1051,19 @@ a {
   .quantity-row {
     grid-template-columns: 1fr;
     gap: 10px;
+  }
+
+  .option-select-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .option-select-guide,
+  .selected-option-list {
+    grid-column: 1;
+  }
+
+  .selected-option-item {
+    padding: 13px;
   }
 
   .meta-list {

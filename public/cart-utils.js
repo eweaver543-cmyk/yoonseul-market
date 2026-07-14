@@ -72,32 +72,38 @@
     return getCart().reduce((sum, item) => sum + Number(item.quantity || 0), 0);
   }
 
-  function addCartItem(item) {
+  function addCartItems(nextItems = []) {
     const items = getCart();
-    const match = items.find((entry) =>
-      Number(entry.productId) === Number(item.productId) &&
-      String(entry.optionLabel || "") === String(item.optionLabel || "")
-    );
+    nextItems.forEach((item) => {
+      const match = items.find((entry) =>
+        Number(entry.productId) === Number(item.productId) &&
+        String(entry.optionLabel || "") === String(item.optionLabel || "")
+      );
 
-    if (match) {
-      match.quantity = Number(match.quantity || 0) + Number(item.quantity || 1);
-    } else {
-      items.unshift({
-        id: item.id || `cart-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        productId: Number(item.productId),
-        brandId: Number(item.brandId || 0),
-        brandName: String(item.brandName || ""),
-        name: String(item.name || ""),
-        price: Number(item.price || 0),
-        image: String(item.image || ""),
-        optionIndex: item.optionIndex == null ? "" : String(item.optionIndex),
-        optionLabel: String(item.optionLabel || "기본 옵션"),
-        quantity: Math.max(1, Number(item.quantity || 1)),
-        addedAt: new Date().toISOString()
-      });
-    }
+      if (match) {
+        match.quantity = Number(match.quantity || 0) + Number(item.quantity || 1);
+      } else {
+        items.unshift({
+          id: item.id || `cart-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          productId: Number(item.productId),
+          brandId: Number(item.brandId || 0),
+          brandName: String(item.brandName || ""),
+          name: String(item.name || ""),
+          price: Number(item.price || 0),
+          image: String(item.image || ""),
+          optionIndex: item.optionIndex == null ? "" : String(item.optionIndex),
+          optionLabel: String(item.optionLabel || "기본 옵션"),
+          quantity: Math.max(1, Number(item.quantity || 1)),
+          addedAt: new Date().toISOString()
+        });
+      }
+    });
 
     return saveCart(items);
+  }
+
+  function addCartItem(item) {
+    return addCartItems([item]);
   }
 
   function mergeCartItems(localItems, serverItems) {
@@ -479,6 +485,7 @@
     saveCart,
     getCartCount,
     addCartItem,
+    addCartItems,
     updateCartQuantity,
     removeCartItem,
     clearCart,

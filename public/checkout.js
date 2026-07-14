@@ -4,6 +4,7 @@ const state = {
   category: null,
   optionLabel: "\uAE30\uBCF8 \uC635\uC158",
   quantity: 1,
+  selections: [],
   paymentMethods: null
 };
 
@@ -11,6 +12,7 @@ let daumPostcodeLoader = null;
 let paymentMethodsChannel = null;
 
 const PAYMENT_METHOD_STORAGE_KEY = "yoonseulPaymentMethods";
+const CHECKOUT_SELECTION_KEY = "yoonseul-checkout-selection";
 const DEFAULT_PAYMENT_METHODS = {
   bankEnabled: true,
   bankLabel: "\uBB34\uD1B5\uC7A5\uC785\uAE08",
@@ -175,8 +177,33 @@ async function loadCheckout() {
   state.category = findCategory(catalog.categories || [], product);
 
   const options = Array.isArray(product.options) ? product.options : [];
-  const option = options[Number(params.get("option"))];
-  state.optionLabel = option ? getOptionLabel(option) : "\uAE30\uBCF8 \uC635\uC158";
+  let restoredSelections = [];
+  if (params.get("selection") === "detail") {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(CHECKOUT_SELECTION_KEY) || "null");
+      const isFresh = saved && Date.now() - Number(saved.savedAt || 0) < 30 * 60 * 1000;
+      if (isFresh && Number(saved.productId) === Number(product.id) && Array.isArray(saved.selections)) {
+        restoredSelections = saved.selections
+          .map((item) => ({
+            optionIndex: Number(item.optionIndex),
+            label: getOptionLabel(options[Number(item.optionIndex)]),
+            quantity: Math.max(1, Math.min(999, Number(item.quantity || 1)))
+          }))
+          .filter((item) => options[item.optionIndex]);
+      }
+    } catch {}
+  }
+
+  if (restoredSelections.length) {
+    state.selections = restoredSelections;
+    state.quantity = restoredSelections.reduce((sum, item) => sum + item.quantity, 0);
+    state.optionLabel = restoredSelections.map((item) => `${item.label} × ${item.quantity}`).join(" · ");
+  } else {
+    const optionParam = params.get("option");
+    const option = optionParam === null ? null : options[Number(optionParam)];
+    state.optionLabel = option ? getOptionLabel(option) : "\uAE30\uBCF8 \uC635\uC158";
+    state.selections = option ? [{ optionIndex: Number(optionParam), label: state.optionLabel, quantity: state.quantity }] : [];
+  }
 
   renderSummary();
   renderPaymentMethods();

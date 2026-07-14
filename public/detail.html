@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="/style.css?v=20260712-mobile-header-left">
-  <link rel="stylesheet" href="/detail.css?v=separate-option-selectors-20260714">
+  <link rel="stylesheet" href="/detail.css?v=linked-option-dropdowns-20260714">
 </head>
 <body>
   <header class="lux-header">
@@ -77,20 +77,27 @@
 
           <div class="option-box" id="optionBox" hidden>
             <label>상품 옵션</label>
-            <div class="option-choice-area">
-              <div class="option-choice-group" id="colorOptionGroup" hidden>
+            <div class="option-select-grid">
+              <label class="option-select-field" id="colorOptionGroup">
                 <span>색상</span>
-                <div class="option-choice-list" id="colorOptionChoices"></div>
-              </div>
-              <div class="option-choice-group" id="sizeOptionGroup" hidden>
-                <span>사이즈</span>
-                <div class="option-choice-list" id="sizeOptionChoices"></div>
-              </div>
-              <p class="selected-option-summary" id="selectedOptionSummary">색상과 사이즈를 선택해 주세요.</p>
+                <span class="custom-select">
+                  <select id="colorOptionSelect" aria-label="색상 선택"></select>
+                  <i class="fa-solid fa-chevron-down"></i>
+                </span>
+              </label>
+              <label class="option-select-field" id="sizeOptionGroup">
+                <span id="sizeOptionLabel">사이즈</span>
+                <span class="custom-select">
+                  <select id="sizeOptionSelect" aria-label="사이즈 선택" disabled></select>
+                  <i class="fa-solid fa-chevron-down"></i>
+                </span>
+              </label>
             </div>
+            <p class="option-select-guide" id="selectedOptionSummary">색상을 먼저 선택한 후 사이즈를 선택해 주세요.</p>
+            <div class="selected-option-list" id="selectedOptionList" aria-live="polite" hidden></div>
           </div>
 
-          <div class="quantity-row">
+          <div class="quantity-row" id="baseQuantityRow">
             <span>수량</span>
             <div class="quantity-control" aria-label="상품 수량 선택">
               <button type="button" id="quantityMinus" aria-label="수량 감소">−</button>
@@ -149,11 +156,9 @@
   </main>
 
   <div class="detail-toast" id="detailToast"></div>
-  <script src="/cart-utils.js"></script>
+  <script src="/cart-utils.js?v=batch-option-cart-20260714"></script>
   <script src="/shared-header.js?v=header-korean-20260712"></script>
-  <script src="/detail.js?v=fast-mobile-product-image-20260714"></script>
+  <script src="/detail.js?v=linked-option-dropdowns-20260714"></script>
   <script src="/shop-member-cart.js?v=header-korean-20260712"></script>
 </body>
 </html>
-
-
