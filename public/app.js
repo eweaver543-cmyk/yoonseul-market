@@ -249,7 +249,6 @@ async function loadBestSellers() {
 
 function filteredProducts() {
   let result = products.filter((product) => {
-    if (!hasProductDisplayImage(product)) return false;
     const brand = brandOf(product);
     const brandMatch = !activeBrandId || Number(product.brandId) === Number(activeBrandId);
     const categoryMatch = !activeCategoryId || Number(product.categoryId) === Number(activeCategoryId);
@@ -270,7 +269,7 @@ function filteredProducts() {
 
 function renderCatalog() {
   const result = filteredProducts();
-  const visibleProducts = result.slice(0, 50);
+  const visibleProducts = result;
   renderBrandCollectionHeader(visibleProducts.length);
   document.querySelector("#productGrid").innerHTML = visibleProducts.map((product) => cardTemplate(product)).join("");
   document.querySelector("#productGrid").hidden = visibleProducts.length === 0;
