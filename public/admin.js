@@ -356,7 +356,11 @@ function productsTemplate() {
 }
 
 function productRowsTemplate(products) {
-  return products.map((product) => {
+  const newestFirst = [...products].sort((a, b) => {
+    const createdDifference = (Date.parse(b.createdAt || "") || 0) - (Date.parse(a.createdAt || "") || 0);
+    return createdDifference || Number(b.id || 0) - Number(a.id || 0);
+  });
+  return newestFirst.map((product) => {
     const brand = dashboardData.brands.find((item) => Number(item.id) === Number(product.brandId));
     const category = findCategory(product.categoryId);
     const thumbnail = product.images?.main?.[0] || product.image || "";
