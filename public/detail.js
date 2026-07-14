@@ -11,6 +11,8 @@ const state = {
   selectedSize: ""
 };
 
+const DETAIL_PREVIEW_KEY = "yoonseul-detail-preview";
+
 const money = (value) => `\u20A9${Number(value || 0).toLocaleString("ko-KR")}`;
 
 const safeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({
@@ -87,7 +89,7 @@ function renderGallery() {
 
   document.querySelector("#thumbnailStrip").innerHTML = state.images.map((source, index) => `
     <button type="button" class="thumbnail-button ${index === 0 ? "active" : ""}" data-image-index="${index}" aria-label="?? ??? ${index + 1} ??">
-      <img src="${source}" alt="${safeHtml(state.product.name) } ?? ??? ??? ${index + 1}" loading="lazy">
+      <img src="${source}" alt="${safeHtml(state.product.name) } ?? ??? ??? ${index + 1}" loading="lazy" decoding="async">
     </button>
   `).join("");
 
@@ -302,8 +304,28 @@ async function loadDetail() {
   const id = new URLSearchParams(location.search).get("id");
   if (!id) throw new Error("NO_ID");
 
-  const response = await fetch("/api/catalog");
-  if (!response.ok) throw new Error("CATALOG_FAILED");
+  let renderedPreview = false;
+  try {
+    const preview = JSON.parse(sessionStorage.getItem(DETAIL_PREVIEW_KEY) || "null");
+    const isFresh = preview && Date.now() - Number(preview.savedAt || 0) < 10 * 60 * 1000;
+    if (isFresh && Number(preview.product?.id) === Number(id)) {
+      state.product = preview.product;
+      state.brand = preview.brand || null;
+      state.category = preview.category || null;
+      state.images = normalizeImages(state.product);
+      if (!state.images.length) {
+        state.images = ["https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1200&q=86"];
+      }
+      renderProduct();
+      renderedPreview = true;
+    }
+  } catch {}
+
+  const response = await fetch("/api/catalog").catch(() => null);
+  if (!response?.ok) {
+    if (renderedPreview) return;
+    throw new Error("CATALOG_FAILED");
+  }
 
   const catalog = await response.json();
   const product = (catalog.products || []).find((item) => Number(item.id) === Number(id));
@@ -319,6 +341,14 @@ async function loadDetail() {
   }
 
   renderProduct();
+  try {
+    sessionStorage.setItem(DETAIL_PREVIEW_KEY, JSON.stringify({
+      savedAt: Date.now(),
+      product: state.product,
+      brand: state.brand,
+      category: state.category
+    }));
+  } catch {}
 }
 
 document.querySelector("#quantityMinus").addEventListener("click", () => {

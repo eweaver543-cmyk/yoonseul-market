@@ -54,6 +54,7 @@ const DEFAULT_DESIGN_BANNERS = [
 const won = (value) => `₩${Number(value).toLocaleString("ko-KR")}`;
 const brandOf = (product) => brands.find((brand) => Number(brand.id) === Number(product.brandId)) || { id: 0, koName: "미지정", enName: "UNASSIGNED" };
 const PRODUCT_PLACEHOLDER_IMAGE = "/images/product-placeholder.svg";
+const DETAIL_PREVIEW_KEY = "yoonseul-detail-preview";
 const productPrimaryImage = (product) => product.images?.main?.[0] || product.image || PRODUCT_PLACEHOLDER_IMAGE;
 const hasProductDisplayImage = (product) => Boolean(product?.images?.main?.[0] || product?.image);
 
@@ -185,7 +186,7 @@ function syncHeaderMemberState() {
 function cardTemplate(product, rank, sales) {
   const brand = brandOf(product);
   return `<article class="product-card" data-product="${product.id}">
-    <div class="product-image"><img src="${productPrimaryImage(product)}" alt="${product.name}" loading="lazy" onerror="this.onerror=null;this.src='${PRODUCT_PLACEHOLDER_IMAGE}'">${rank ? `<span class="rank-number">${rank}</span>` : ""}<button class="heart-button" data-wishlist="${product.id}" aria-label="${product.name} 찜하기">♡</button></div>
+    <div class="product-image"><img src="${productPrimaryImage(product)}" alt="${product.name}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${PRODUCT_PLACEHOLDER_IMAGE}'">${rank ? `<span class="rank-number">${rank}</span>` : ""}<button class="heart-button" data-wishlist="${product.id}" aria-label="${product.name} 찜하기">♡</button></div>
     <div class="card-info"><small>${brand.enName}</small><h3>${product.name}</h3>${sales ? `<span class="sales-count">판매 ${Number(sales.units || 0).toLocaleString("ko-KR")}개 · 주문 ${Number(sales.orderCount || 0).toLocaleString("ko-KR")}건</span>` : ""}<strong>${won(product.price)}</strong><del>${won(product.oldPrice)}</del><button class="add-button" data-cart="${product.id}">장바구니 담기</button></div>
   </article>`;
 }
@@ -194,6 +195,26 @@ function bindCardActions() {
   document.querySelectorAll(".product-card").forEach((card) => card.addEventListener("click", () => {
     const productId = card.dataset.product;
     if (!productId) return;
+    const product = products.find((item) => Number(item.id) === Number(productId));
+    if (product) {
+      const categoryGroup = categories.find((entry) => Number(entry.brandId) === Number(product.brandId));
+      const category = categoryGroup?.items?.find((entry) => Number(entry.id) === Number(product.categoryId)) || null;
+      try {
+        sessionStorage.setItem(DETAIL_PREVIEW_KEY, JSON.stringify({
+          savedAt: Date.now(),
+          product,
+          brand: brandOf(product),
+          category
+        }));
+      } catch {}
+
+      const imageSource = productPrimaryImage(product);
+      if (imageSource && imageSource !== PRODUCT_PLACEHOLDER_IMAGE) {
+        const preload = new Image();
+        preload.fetchPriority = "high";
+        preload.src = imageSource;
+      }
+    }
     window.location.href = `/detail.html?id=${encodeURIComponent(productId)}`;
   }));
   document.querySelectorAll("[data-wishlist]").forEach((button) => {

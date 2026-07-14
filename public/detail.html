@@ -49,7 +49,7 @@
       <section class="product-top">
         <div class="detail-gallery">
           <figure class="main-image-wrap">
-            <img id="mainProductImage" alt="상품 대표 이미지">
+            <img id="mainProductImage" alt="상품 대표 이미지" loading="eager" fetchpriority="high" decoding="async">
             <figcaption class="image-caption"><i class="fa-regular fa-image"></i> 이미지 클릭 또는 썸네일 선택</figcaption>
           </figure>
           <div class="thumbnail-strip" id="thumbnailStrip" aria-label="상품 이미지 썸네일"></div>
@@ -151,10 +151,9 @@
   <div class="detail-toast" id="detailToast"></div>
   <script src="/cart-utils.js"></script>
   <script src="/shared-header.js?v=header-korean-20260712"></script>
-  <script src="/detail.js?v=separate-option-selectors-20260714"></script>
+  <script src="/detail.js?v=fast-mobile-product-image-20260714"></script>
   <script src="/shop-member-cart.js?v=header-korean-20260712"></script>
 </body>
 </html>
-
 
 
