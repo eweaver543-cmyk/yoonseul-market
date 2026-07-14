@@ -395,7 +395,11 @@ body{padding-top:82px}
   .all-section .section-title{display:block;margin-bottom:24px;text-align:left}
   .all-section .section-title small{display:block;margin-bottom:7px;color:#A9823F;font-family:Inter,sans-serif;font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
   .all-section .section-title h2{margin:0;color:#2C2A29;font-family:var(--font-sans);font-size:28px;font-weight:800;letter-spacing:-.055em;line-height:1.18}
-  .all-section .section-title p,.all-section .sort-wrap,.brand-sidebar,.brand-collection-header,.active-filter,.brand-category-tabs{display:none!important}
+  .all-section .section-title p,.all-section .sort-wrap,.brand-sidebar,.active-filter{display:none!important}
+  .brand-collection-header{display:block;margin:0 0 24px;padding:12px 0 22px;text-align:center}
+  .brand-category-tabs{display:flex;justify-content:flex-start;flex-wrap:nowrap;gap:9px;max-width:100%;margin:24px 0 0;padding:20px 2px 6px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .brand-category-tabs::-webkit-scrollbar{display:none}
+  .brand-category-tab{flex:0 0 auto;scroll-snap-align:start}
   .catalog-layout{display:block!important}
   .catalog-main{width:100%}
   .product-grid{margin-top:0}
