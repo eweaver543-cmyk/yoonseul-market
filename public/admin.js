@@ -234,7 +234,7 @@ function requestTable(items) {
       <td><strong class="order-product-name">${safeHtml(item.productName || item.itemType)}</strong><span class="order-option">옵션: ${safeHtml(item.option || "기본")}</span></td>
       <td><strong>${safeHtml(item.name)}</strong><small>${safeHtml(item.phone)}</small></td>
       <td><strong class="order-price">₩${money(item.confirmedPrice || item.estimatedPrice)}</strong><small>${item.confirmedPrice ? "결제 확정" : "예상 금액"}</small></td>
-      <td><code class="customs-code">${safeHtml(item.customsCode)}</code></td>
+      <td><code class="customs-code" title="${item.customsCodeAvailable ? "관리자 전용 전체 번호" : "기존 주문은 원본 번호가 저장되지 않았습니다."}">${safeHtml(item.customsCode || "-")}</code></td>
       <td><div class="order-status-control"><span class="order-status-badge ${orderStatusClass(item.status)}">${item.status}</span><select class="order-status-select ${orderStatusClass(item.status)}" data-order="${item.id}" aria-label="${item.id} 주문상태">${statuses.map((status) => `<option ${status === item.status ? "selected" : ""}>${status}</option>`).join("")}</select></div></td>
     </tr>`).join("")}
     </tbody></table></div>`;

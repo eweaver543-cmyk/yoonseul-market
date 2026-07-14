@@ -29,10 +29,12 @@ const DATA_DIR = process.env.DATA_DIR
   ? path.resolve(process.env.DATA_DIR)
   : path.join(ROOT_DIR, "data");
 const DB_PATH = path.join(DATA_DIR, "db.json");
+const CUSTOMS_KEY_PATH = path.join(DATA_DIR, ".customs-data-key");
 const UPLOAD_DIR = process.env.UPLOAD_DIR
   ? path.resolve(process.env.UPLOAD_DIR)
   : path.join(PUBLIC_DIR, "uploads");
 const PRODUCT_UPLOAD_DIR = path.join(UPLOAD_DIR, "products");
+let customsDataKey = null;
 
 const allowedStatuses = ["입금대기", "배송준비중", "배송중", "배송완료", "취소/반품"];
 
@@ -54,6 +56,69 @@ const mimeTypes = {
 
 function ensureDir(dirPath) {
   fs.mkdirSync(dirPath, { recursive: true });
+}
+
+function getCustomsDataKey() {
+  if (customsDataKey) return customsDataKey;
+  ensureDir(DATA_DIR);
+
+  if (!fs.existsSync(CUSTOMS_KEY_PATH)) {
+    try {
+      fs.writeFileSync(CUSTOMS_KEY_PATH, crypto.randomBytes(32).toString("base64url"), {
+        encoding: "utf8",
+        mode: 0o600,
+        flag: "wx"
+      });
+    } catch (error) {
+      if (error.code !== "EEXIST") throw error;
+    }
+  }
+
+  const storedKey = String(fs.readFileSync(CUSTOMS_KEY_PATH, "utf8") || "").trim();
+  if (!storedKey) throw new Error("개인통관고유부호 암호화 키를 불러올 수 없습니다.");
+  customsDataKey = crypto.createHash("sha256").update(storedKey).digest();
+  return customsDataKey;
+}
+
+function maskCustomsCode(value) {
+  const normalized = String(value || "").toUpperCase().replace(/[\s-]/g, "");
+  return normalized.length > 4
+    ? `${normalized.slice(0, 1)}${"*".repeat(normalized.length - 3)}${normalized.slice(-2)}`
+    : "****";
+}
+
+function encryptCustomsCode(value) {
+  const normalized = String(value || "").toUpperCase().replace(/[\s-]/g, "");
+  if (!normalized) return "";
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv("aes-256-gcm", getCustomsDataKey(), iv);
+  const encrypted = Buffer.concat([cipher.update(normalized, "utf8"), cipher.final()]);
+  return ["v1", iv.toString("base64url"), cipher.getAuthTag().toString("base64url"), encrypted.toString("base64url")].join(".");
+}
+
+function decryptCustomsCode(value) {
+  try {
+    const [version, iv, tag, encrypted] = String(value || "").split(".");
+    if (version !== "v1" || !iv || !tag || !encrypted) return "";
+    const decipher = crypto.createDecipheriv("aes-256-gcm", getCustomsDataKey(), Buffer.from(iv, "base64url"));
+    decipher.setAuthTag(Buffer.from(tag, "base64url"));
+    return Buffer.concat([
+      decipher.update(Buffer.from(encrypted, "base64url")),
+      decipher.final()
+    ]).toString("utf8");
+  } catch {
+    return "";
+  }
+}
+
+function adminRequestView(item) {
+  const { customsCodeEncrypted, ...visible } = item;
+  const decryptedCustomsCode = decryptCustomsCode(customsCodeEncrypted);
+  return {
+    ...visible,
+    customsCode: decryptedCustomsCode || visible.customsCode || "-",
+    customsCodeAvailable: Boolean(decryptedCustomsCode)
+  };
 }
 
 function copyDirectoryContents(sourceDir, targetDir) {
@@ -900,7 +965,8 @@ async function handleApi(req, res, url) {
       email: String(body.email || "").trim(),
       postcode: String(body.postcode || "").trim(),
       paymentMethod: String(body.paymentMethod || "무통장입금").trim(),
-      customsCode: customs.length > 4 ? `${customs.slice(0, 1)}${"*".repeat(customs.length - 3)}${customs.slice(-2)}` : "****",
+      customsCode: maskCustomsCode(customs),
+      customsCodeEncrypted: encryptCustomsCode(customs),
       estimatedPrice: Number(body.estimatedPrice || body.orderTotal || 0) || calculatePrice(body, db.pricing),
       confirmedPrice: Number(body.confirmedPrice || body.orderTotal || 0) || null,
       status: "입금대기",
@@ -909,7 +975,8 @@ async function handleApi(req, res, url) {
 
     db.requests.unshift(request);
     writeDb(db);
-    return send(res, 201, request);
+    const { customsCodeEncrypted, ...publicRequest } = request;
+    return send(res, 201, publicRequest);
   }
 
   if (url.pathname === "/api/cart" && req.method === "GET") {
@@ -1029,7 +1096,7 @@ async function handleApi(req, res, url) {
     );
 
     return send(res, 200, {
-      requests: db.requests,
+      requests: db.requests.map(adminRequestView),
       users: db.users.map(safeUser),
       inquiries: db.inquiries,
       brands: db.brands,
@@ -1295,7 +1362,7 @@ async function handleApi(req, res, url) {
     if (body.adminMemo !== undefined) item.adminMemo = String(body.adminMemo || "");
     item.updatedAt = new Date().toISOString();
     writeDb(db);
-    return send(res, 200, item);
+    return send(res, 200, adminRequestView(item));
   }
 
   return sendError(res, 404, "API를 찾을 수 없습니다.");
