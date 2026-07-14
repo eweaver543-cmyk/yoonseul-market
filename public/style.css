@@ -13,6 +13,10 @@ html,body{overflow-x:hidden}body,button,input,select{font-family:var(--font-sans
 .main-nav a:hover,.main-nav button:hover{font-weight:700}
 .sidebar-head b,.brand-filter{font-size:16px;font-weight:500;line-height:1.5}.brand-filter:hover{font-weight:700}
 .section-title h2{font-family:var(--font-sans);font-weight:700;letter-spacing:-.035em}
+.section-title-button{display:inline-flex;align-items:center;min-height:44px;margin:-4px 0;padding:4px 0;border:0;background:transparent;color:inherit;font:inherit;letter-spacing:inherit;text-align:left;cursor:pointer;transition:color .18s ease,transform .18s ease}
+.section-title-button:hover{color:#9C793E;transform:translateX(3px)}
+.section-title-button:focus-visible{outline:2px solid #D4B26F;outline-offset:5px;border-radius:2px}
+#bestGrid,#productGrid{scroll-margin-top:110px}
 .section-title p,.hero-inner>span{font-size:14px;font-weight:400;line-height:1.6}
 .card-info{line-height:1.5}.card-info small{font-family:var(--font-latin);font-size:13px;font-weight:400;color:#888}.card-info h3{font-size:15px;font-weight:500;color:#222;line-height:1.5;margin:8px 0 10px}.card-info strong{font-family:var(--font-latin);font-size:16px;font-weight:700;color:#222}.card-info del{font-family:var(--font-latin);font-size:13px;font-weight:400}.rank-number,.hero-inner>p,.section-title small,.active-filter,.sort-wrap,.quick-tags,.add-button{font-family:var(--font-latin)}
 .ranking-tabs button,.sort-wrap,.sort-wrap select,.quick-tags small,.quick-tags button,.add-button{font-size:13px}

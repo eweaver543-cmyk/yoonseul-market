@@ -610,6 +610,13 @@ document.querySelector("#searchForm").addEventListener("submit", (event) => {
   }
   document.querySelector("#all").scrollIntoView({ behavior: "smooth" });
 });
+document.querySelector("#bestTitleButton")?.addEventListener("click", () => {
+  document.querySelector("#bestGrid")?.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+document.querySelector("#allTitleButton")?.addEventListener("click", () => {
+  document.querySelector("#sortSelect").value = "featured";
+  selectBrand(0);
+});
 document.querySelector("#rankingTabs").addEventListener("click", (event) => {
   if (event.target.tagName !== "BUTTON") return;
   document.querySelectorAll("#rankingTabs button").forEach((button) => button.classList.remove("active"));

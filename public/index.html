@@ -59,7 +59,7 @@
 
     <section class="best-section section" id="best">
       <div class="section-title">
-        <div><small>SALES RANKING</small><h2>베스트 상품</h2><p id="bestPeriodDescription">최근 24시간 판매 수량 기준 · 10초마다 갱신</p></div>
+        <div><small>SALES RANKING</small><h2><button type="button" class="section-title-button" id="bestTitleButton">베스트 상품</button></h2><p id="bestPeriodDescription">최근 24시간 판매 수량 기준 · 10초마다 갱신</p></div>
         <div class="ranking-tabs" id="rankingTabs"><button class="active" data-rank="realtime">실시간</button><button data-rank="weekly">주간</button><button data-rank="monthly">월간</button></div>
       </div>
       <div class="best-grid" id="bestGrid"></div>
@@ -67,7 +67,7 @@
 
     <section class="all-section section" id="all">
       <div class="section-title">
-        <div><small>THE COLLECTION</small><h2>전체 상품</h2><p>엄선된 글로벌 럭셔리 아이템을 브랜드별로 둘러보세요.</p></div>
+        <div><small>THE COLLECTION</small><h2><button type="button" class="section-title-button" id="allTitleButton">전체 상품</button></h2><p>엄선된 글로벌 럭셔리 아이템을 브랜드별로 둘러보세요.</p></div>
         <div class="sort-wrap"><span id="productTotal">총 10개</span><select id="sortSelect"><option value="featured">추천순</option><option value="low">낮은 가격순</option><option value="high">높은 가격순</option></select></div>
       </div>
       <div class="catalog-layout">
@@ -265,7 +265,7 @@
   </div>
   <div class="toast" id="toast"></div>
   <script src="/cart-utils.js"></script>
-  <script src="/app.js?v=newest-first-pc-mobile-20260714"></script>
+  <script src="/app.js?v=clickable-section-titles-20260714"></script>
   <script src="/shop-member-cart.js?v=header-korean-20260712"></script>
 </body>
 </html>
