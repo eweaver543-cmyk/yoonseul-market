@@ -1770,8 +1770,18 @@ Sitemap: ${absoluteSiteUrl("/sitemap.xml")}
         : { "Cache-Control": "public, max-age=86400, immutable", ...extraHeaders };
     let responseData = data;
     if (safeTarget === "/index.html") {
-      const bootstrap = JSON.stringify(storefrontPayload(readDb())).replace(/</g, "\\u003c");
-      responseData = data.toString("utf8").replace("</head>", `<script>window.YOONSEUL_STOREFRONT_BOOTSTRAP=${bootstrap};</script></head>`);
+      const db = readDb();
+      const bootstrap = JSON.stringify(storefrontPayload(db)).replace(/</g, "\\u003c");
+      const mobileBrands = [...db.brands]
+        .sort((a, b) => Number(a.order || 0) - Number(b.order || 0))
+        .map((brand) => `<button type="button" data-brand-id="${Number(brand.id)}"><span>${escapeHtmlAttribute(brand.koName)}</span></button>`)
+        .join("");
+      responseData = data.toString("utf8")
+        .replace("</head>", `<script>window.YOONSEUL_STOREFRONT_BOOTSTRAP=${bootstrap};</script></head>`)
+        .replace(
+          '<nav class="mobile-brand-list" id="mobileBrandDrawerList" aria-label="모바일 브랜드 목록"></nav>',
+          `<nav class="mobile-brand-list" id="mobileBrandDrawerList" aria-label="모바일 브랜드 목록">${mobileBrands}</nav>`
+        );
     }
     send(
       res,

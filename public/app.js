@@ -556,6 +556,9 @@ function closeMoreMenu() {
 }
 
 function openMobileDrawer() {
+  if (!document.querySelector("#mobileBrandDrawerList")?.children.length && brands.length) {
+    renderBrandControls();
+  }
   document.body.classList.add("drawer-open");
   document.querySelector("#mobileCategoryDrawer")?.setAttribute("aria-hidden", "false");
 }
