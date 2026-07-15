@@ -873,3 +873,5 @@ body{padding-top:82px}
 }
 .heart-button.active{background:#D4B26F!important;color:#2C2A29!important;box-shadow:0 10px 24px rgba(171,135,70,.22)}
 .product-image-link{display:block;width:100%;height:100%;color:inherit;text-decoration:none}.product-title-link{color:inherit;text-decoration:none}.product-title-link:hover{text-decoration:underline;text-underline-offset:3px}
+.search-hero{background-image:linear-gradient(90deg,rgba(253,251,247,.99) 0%,rgba(253,251,247,.93) 48%,rgba(253,251,247,.56) 100%),url("/assets/luxury-hero.png");background-image:linear-gradient(90deg,rgba(253,251,247,.99) 0%,rgba(253,251,247,.93) 48%,rgba(253,251,247,.56) 100%),url("/assets/luxury-hero-1600.webp")}
+@media(max-width:580px){.search-hero{background-image:linear-gradient(90deg,rgba(253,251,247,.99) 0%,rgba(253,251,247,.93) 48%,rgba(253,251,247,.56) 100%),url("/assets/luxury-hero.png");background-image:linear-gradient(90deg,rgba(253,251,247,.99) 0%,rgba(253,251,247,.93) 48%,rgba(253,251,247,.56) 100%),url("/assets/luxury-hero-960.webp")}}
