@@ -374,6 +374,8 @@ function renderBrandCollectionHeader(totalCount) {
     event.preventDefault();
     selectBrandCategory(Number(button.dataset.categoryId));
   }));
+  const tabList = header.querySelector(".brand-category-tabs");
+  if (tabList) tabList.scrollLeft = 0;
 }
 
 function animateProductGrid() {
@@ -386,7 +388,8 @@ function animateProductGrid() {
 }
 
 function scrollToProductGrid() {
-  const target = document.querySelector("#productGrid:not([hidden])") || document.querySelector("#emptyState") || document.querySelector("#all");
+  const brandHeader = document.querySelector("#brandCollectionHeader:not([hidden])");
+  const target = brandHeader || document.querySelector("#productGrid:not([hidden])") || document.querySelector("#emptyState") || document.querySelector("#all");
   const header = document.querySelector(".lux-header");
   const topBanner = document.querySelector("#homeTopBanner:not([hidden])");
   const topBannerVisible = topBanner && !document.body.classList.contains("notice-collapsed");

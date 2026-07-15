@@ -119,6 +119,12 @@ body{background:#FDFBF7}
 @media(max-width:850px){.brand-collection-header{margin-bottom:24px;padding:12px 0 22px}.brand-title-block h2{font-size:36px}.brand-category-tabs{justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;margin-left:-2px;margin-right:-2px;padding:20px 2px 2px;scrollbar-width:none}.brand-category-tabs::-webkit-scrollbar{display:none}.brand-category-tab{flex:0 0 auto}}
 @media(max-width:580px){.brand-title-block h2{font-size:31px}.brand-title-block small,.brand-title-block p{font-size:12px}.brand-category-tab{min-height:38px;padding:0 14px;font-size:12px}}
 
+@media(max-width:768px){
+  .brand-collection-header{width:100%;overflow:hidden}
+  .brand-category-tabs{width:100%;padding-bottom:8px;scroll-padding-inline:2px}
+  .brand-category-tab{display:inline-flex;align-items:center;justify-content:center;min-width:78px;white-space:nowrap;border-radius:0}
+}
+
 /* More menu now works as the dynamic brand list */
 .more-menu>.more-brand-panel{right:50%;transform:translateX(50%);top:70px;width:min(720px,calc(100vw - 48px));padding:18px;border-radius:14px;background:rgba(253,251,247,.98);border:1px solid #E2D8C8;box-shadow:0 24px 70px rgba(74,60,40,.16);backdrop-filter:blur(14px);gap:10px;grid-template-columns:repeat(4,minmax(0,1fr));align-items:stretch}
 .more-menu:hover>.more-brand-panel,.more-menu.open>.more-brand-panel{display:grid;flex-direction:unset}
