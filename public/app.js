@@ -56,6 +56,10 @@ const brandOf = (product) => brands.find((brand) => Number(brand.id) === Number(
 const PRODUCT_PLACEHOLDER_IMAGE = "/images/product-placeholder.svg";
 const DETAIL_PREVIEW_KEY = "yoonseul-detail-preview";
 const productPrimaryImage = (product) => product.images?.main?.[0] || product.image || PRODUCT_PLACEHOLDER_IMAGE;
+const productThumbnailImage = (product) => {
+  const original = productPrimaryImage(product);
+  return original.startsWith("/uploads/") ? `/thumbnail?src=${encodeURIComponent(original)}` : original;
+};
 const hasProductDisplayImage = (product) => Boolean(product?.images?.main?.[0] || product?.image);
 const productDetailUrl = (product) => {
   const slug = String(product?.name || "product")
@@ -195,8 +199,10 @@ function syncHeaderMemberState() {
 function cardTemplate(product, rank, sales, priority = false) {
   const brand = brandOf(product);
   const detailUrl = productDetailUrl(product);
+  const originalImage = productPrimaryImage(product);
+  const cardImage = productThumbnailImage(product);
   return `<article class="product-card" data-product="${product.id}">
-    <div class="product-image"><a class="product-image-link" href="${detailUrl}" aria-label="${escapeHtml(product.name)} 상세보기"><img src="${escapeHtml(productPrimaryImage(product))}" alt="${escapeHtml(product.name)}" loading="${priority ? "eager" : "lazy"}" decoding="async"${priority ? ' fetchpriority="high"' : ""} onerror="this.onerror=null;this.src='${PRODUCT_PLACEHOLDER_IMAGE}'"></a>${rank ? `<span class="rank-number">${rank}</span>` : ""}<button class="heart-button" data-wishlist="${product.id}" aria-label="${escapeHtml(product.name)} 찜하기">♡</button></div>
+    <div class="product-image"><a class="product-image-link" href="${detailUrl}" aria-label="${escapeHtml(product.name)} 상세보기"><img src="${escapeHtml(cardImage)}" data-original="${escapeHtml(originalImage)}" alt="${escapeHtml(product.name)}" loading="${priority ? "eager" : "lazy"}" decoding="async"${priority ? ' fetchpriority="high"' : ""} onerror="if(this.dataset.original&&this.src!==this.dataset.original){this.src=this.dataset.original;this.dataset.original='';}else{this.onerror=null;this.src='${PRODUCT_PLACEHOLDER_IMAGE}';}"></a>${rank ? `<span class="rank-number">${rank}</span>` : ""}<button class="heart-button" data-wishlist="${product.id}" aria-label="${escapeHtml(product.name)} 찜하기">♡</button></div>
     <div class="card-info"><small>${escapeHtml(brand.enName)}</small><h3><a class="product-title-link" href="${detailUrl}">${escapeHtml(product.name)}</a></h3>${sales ? `<span class="sales-count">판매 ${Number(sales.units || 0).toLocaleString("ko-KR")}개 · 주문 ${Number(sales.orderCount || 0).toLocaleString("ko-KR")}건</span>` : ""}<strong>${won(product.price)}</strong><del>${won(product.oldPrice)}</del><button class="add-button" data-cart="${product.id}">장바구니 담기</button></div>
   </article>`;
 }

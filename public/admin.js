@@ -295,6 +295,7 @@ function brandsTemplate() {
 function productsTemplate() {
   const brandOptions = [...dashboardData.brands].sort((a, b) => Number(a.order) - Number(b.order)).map((brand) => `<option value="${brand.id}">${brand.koName} / ${brand.enName}</option>`).join("");
   return `<div class="view-heading"><div><p>PRODUCT MANAGEMENT</p><h2>상품 관리</h2></div><button id="newProductButton"><i class="fa-solid fa-plus"></i> 새 상품 등록</button></div>
+    <section class="panel thumbnail-optimizer"><div><h3>모바일 이미지 빠르게 만들기</h3><p id="thumbnailOptimizationStatus">기존 상품 상태를 확인하고 있습니다.</p></div><button type="button" id="optimizeExistingImages"><i class="fa-solid fa-wand-magic-sparkles"></i> 기존 상품 5장씩 최적화</button></section>
     <section class="panel product-editor" id="productEditor" hidden><div class="panel-head"><div><h3 id="productEditorTitle">새 상품 등록</h3><p>대분류를 고르면 등록 가능한 소분류만 자동으로 표시됩니다.</p></div><button id="closeProductEditor">닫기 ×</button></div>
       <form id="productForm" class="management-form product-form">
         <input type="hidden" name="id">
@@ -321,7 +322,7 @@ function productsTemplate() {
           <label>판매가<input name="price" type="number" min="1" required placeholder="판매가 입력"></label>
         </div>
         <section class="product-form-section image-upload-section">
-          <div class="form-section-heading"><div><span>01</span><div><h4>상품 이미지</h4><p>선택 즉시 미리보기를 표시하고 최대 1200px·WebP/JPEG 78% 품질로 자동 최적화합니다.</p></div></div><strong id="imageOptimizationSummary">대표 0/10 · 상세 0/20</strong></div>
+          <div class="form-section-heading"><div><span>01</span><div><h4>상품 이미지</h4><p>원본은 보존하고 상세용 WebP와 720px 목록 썸네일을 자동 생성합니다.</p></div></div><div class="image-heading-actions"><label class="folder-upload-action" for="productFolderInput"><i class="fa-regular fa-folder-open"></i> 폴더 선택</label><input id="productFolderInput" type="file" accept="image/jpeg,image/png,image/webp" webkitdirectory directory multiple hidden><strong id="imageOptimizationSummary">대표 0/10 · 상세 0/20</strong></div></div>
           <div class="upload-field">
             <div class="upload-label"><b>대표 이미지</b><small>첫 번째 이미지가 쇼핑몰 대표 이미지로 사용됩니다.</small></div>
             <input id="mainImageInput" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
@@ -331,7 +332,7 @@ function productsTemplate() {
           <div class="upload-field">
             <div class="upload-label"><b>상세 이미지 목록</b><small>여러 장을 한 번에 선택하거나 이 영역에 끌어다 놓으세요.</small></div>
             <input id="detailImageInput" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
-            <label class="image-drop-zone wide" for="detailImageInput" data-image-kind="detail"><i class="fa-solid fa-cloud-arrow-up"></i><b>상세 이미지 다중 업로드</b><span>JPG·PNG·WEBP · 최대 20장 · 용량 제한 없음</span></label>
+            <label class="image-drop-zone wide" for="detailImageInput" data-image-kind="detail"><i class="fa-solid fa-cloud-arrow-up"></i><b>상세 이미지 다중 업로드</b><span>JPG·PNG·WEBP · 최대 20장 · 파일당 20MB</span></label>
             <div class="image-preview-grid detail" id="detailImagePreviews"></div>
           </div>
         </section>
@@ -364,10 +365,11 @@ function productRowsTemplate(products) {
     const brand = dashboardData.brands.find((item) => Number(item.id) === Number(product.brandId));
     const category = findCategory(product.categoryId);
     const thumbnail = product.images?.main?.[0] || product.image || "";
+    const thumbnailSrc = thumbnail.startsWith("/uploads/") ? `/thumbnail?src=${encodeURIComponent(thumbnail)}` : thumbnail;
     const detailCount = product.images?.detail?.length || 0;
     return `<tr data-product-row="${product.id}">
       <td><input type="checkbox" class="product-row-check" value="${product.id}" aria-label="${safeHtml(product.name)} 선택"></td>
-      <td>${thumbnail ? `<img class="product-list-thumb" src="${thumbnail}" alt="${safeHtml(product.name)} 대표 이미지" loading="lazy">` : `<span class="product-thumb-empty"><i class="fa-regular fa-image"></i></span>`}</td>
+      <td>${thumbnail ? `<img class="product-list-thumb" src="${thumbnailSrc}" data-original="${thumbnail}" alt="${safeHtml(product.name)} 대표 이미지" loading="lazy" onerror="if(this.dataset.original){this.src=this.dataset.original;this.dataset.original='';}">` : `<span class="product-thumb-empty"><i class="fa-regular fa-image"></i></span>`}</td>
       <td><strong class="product-list-name">${safeHtml(product.name)}</strong><small>상품번호 #${product.id}</small></td>
       <td>${brand ? `${safeHtml(brand.koName)}<small>${safeHtml(brand.enName)}</small>` : "미지정"}</td>
       <td><span class="product-category-badge">${safeHtml(category?.name || "미분류")}</span></td>
@@ -1402,6 +1404,47 @@ function switchView(view) {
   closeSidebar();
 }
 
+async function refreshThumbnailOptimizationStatus() {
+  const label = document.querySelector("#thumbnailOptimizationStatus");
+  if (!label) return;
+  try {
+    const status = await adminApi("/api/admin/product-thumbnails");
+    label.textContent = status.pending
+      ? `전체 ${status.total}개 중 ${status.completed}개 완료 · ${status.pending}개 남음`
+      : `전체 ${status.total}개 상품의 모바일 이미지 준비 완료`;
+  } catch (error) {
+    label.textContent = "상태를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";
+  }
+}
+
+async function optimizeExistingProductImages() {
+  const button = document.querySelector("#optimizeExistingImages");
+  if (!button || button.disabled) return;
+  button.disabled = true;
+  try {
+    while (true) {
+      button.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 5장씩 처리 중`;
+      const result = await adminApi("/api/admin/product-thumbnails", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ limit: 5 })
+      });
+      if (result.error) throw new Error(result.error);
+      await refreshThumbnailOptimizationStatus();
+      if (!result.pending || !result.created) {
+        showToast(result.failed ? `${result.failed}장 처리 실패 · 원본 이미지를 확인해 주세요.` : "기존 상품 이미지 최적화가 완료되었습니다.");
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+  } catch (error) {
+    showToast(error.message || "이미지 최적화를 완료하지 못했습니다.");
+  } finally {
+    button.disabled = false;
+    button.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> 기존 상품 5장씩 최적화`;
+  }
+}
+
 function bindDynamicEvents() {
   document.querySelectorAll("[data-switch]").forEach((button) => {
     const activate = () => {
@@ -1451,6 +1494,8 @@ function bindDynamicEvents() {
   document.querySelector("#saveBrandOrder")?.addEventListener("click", saveBrandOrder);
   const newProductButton = document.querySelector("#newProductButton");
   if (newProductButton) newProductButton.addEventListener("click", () => openProductEditor());
+  document.querySelector("#optimizeExistingImages")?.addEventListener("click", optimizeExistingProductImages);
+  refreshThumbnailOptimizationStatus();
   document.querySelectorAll(".edit-product").forEach((button) => button.addEventListener("click", () => openProductEditor(Number(button.dataset.product))));
   document.querySelectorAll(".delete-product").forEach((button) => button.addEventListener("click", () => deleteProduct(Number(button.dataset.product))));
   document.querySelector("#selectAllProducts")?.addEventListener("change", (event) => {
@@ -1467,6 +1512,17 @@ function bindDynamicEvents() {
   });
   document.querySelector("#detailImageInput")?.addEventListener("change", (event) => {
     addProductImages("detail", event.target.files);
+    event.target.value = "";
+  });
+  document.querySelector("#productFolderInput")?.addEventListener("change", (event) => {
+    const files = [...event.target.files].filter((file) => file.type.startsWith("image/"));
+    if (!files.length) return;
+    if (!productImages.main.length) {
+      addProductImages("main", files.slice(0, 1));
+      addProductImages("detail", files.slice(1));
+    } else {
+      addProductImages("detail", files);
+    }
     event.target.value = "";
   });
   document.querySelectorAll(".image-drop-zone").forEach((zone) => {
@@ -1921,7 +1977,10 @@ function enqueueProductUpload(task) {
 
 function addProductImages(kind, fileList) {
   const limit = kind === "main" ? 10 : 20;
-  const files = [...fileList].filter((file) => file.type.startsWith("image/"));
+  const imageFiles = [...fileList].filter((file) => file.type.startsWith("image/"));
+  const oversized = imageFiles.filter((file) => file.size > 20 * 1024 * 1024);
+  const files = imageFiles.filter((file) => file.size <= 20 * 1024 * 1024);
+  if (oversized.length) showToast(`20MB를 넘는 이미지 ${oversized.length}장은 제외했습니다.`);
   const available = limit - productImages[kind].length;
   if (available <= 0) return showToast(`${kind === "main" ? "대표" : "상세"} 이미지는 최대 ${limit}장까지 등록할 수 있습니다.`);
   files.slice(0, available).forEach((file) => {
@@ -1941,10 +2000,9 @@ function addProductImages(kind, fileList) {
       Object.assign(item, result, { status: "done" });
       renderProductImages(kind);
       return item;
-    }).catch(() => {
-      item.status = "done";
-      item.fallback = true;
-      item.optimizedSize = Number(item.file.size || 0);
+    }).catch((error) => {
+      item.status = "error";
+      item.error = error.message;
       renderProductImages(kind);
       return item;
     });
@@ -1982,15 +2040,7 @@ async function uploadProductImage(item, kind) {
       fallback: false
     };
   } catch (error) {
-    const dataUrl = await readFileAsDataUrl(item.file);
-    return {
-      preview: item.preview,
-      dataUrl,
-      optimizedSize: Number(item.file.size || 0),
-      width: 0,
-      height: 0,
-      fallback: true
-    };
+    throw error;
   }
 }
 

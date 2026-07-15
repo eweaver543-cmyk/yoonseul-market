@@ -78,13 +78,30 @@ function updateTotal() {
   document.querySelector("#totalPrice").textContent = money(total);
 }
 
+function thumbnailImageUrl(source) {
+  return String(source || "").startsWith("/uploads/") ? `/thumbnail?src=${encodeURIComponent(source)}` : source;
+}
+
+function loadMainProductImage(source) {
+  const image = document.querySelector("#mainProductImage");
+  if (!image || !source) return;
+  const preview = thumbnailImageUrl(source);
+  image.src = preview;
+  if (preview === source) return;
+  const full = new Image();
+  full.onload = () => {
+    if (state.images[state.activeImage] === source) image.src = source;
+  };
+  full.src = source;
+}
+
 function switchMainImage(index) {
   if (!state.images[index]) return;
   state.activeImage = index;
   const image = document.querySelector("#mainProductImage");
   image.classList.add("switching");
   window.setTimeout(() => {
-    image.src = state.images[index];
+    loadMainProductImage(state.images[index]);
     image.classList.remove("switching");
   }, 100);
   document.querySelectorAll(".thumbnail-button").forEach((button) => {
@@ -95,12 +112,12 @@ function switchMainImage(index) {
 function renderGallery() {
   state.images = normalizeImages(state.product);
   const mainImage = document.querySelector("#mainProductImage");
-  mainImage.src = state.images[0] || "";
+  loadMainProductImage(state.images[0] || "");
   mainImage.alt = `${state.product.name} ?? ???`;
 
   document.querySelector("#thumbnailStrip").innerHTML = state.images.map((source, index) => `
     <button type="button" class="thumbnail-button ${index === 0 ? "active" : ""}" data-image-index="${index}" aria-label="?? ??? ${index + 1} ??">
-      <img src="${source}" alt="${safeHtml(state.product.name) } ?? ??? ??? ${index + 1}" loading="lazy" decoding="async">
+      <img src="${thumbnailImageUrl(source)}" data-original="${source}" alt="${safeHtml(state.product.name) } 상품 이미지 ${index + 1}" loading="lazy" decoding="async" onerror="if(this.dataset.original){this.src=this.dataset.original;this.dataset.original='';}">
     </button>
   `).join("");
 

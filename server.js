@@ -16,10 +16,13 @@ const ADMIN_SESSION_TTL_HOURS = Number(process.env.ADMIN_SESSION_TTL_HOURS || 24
 const ADMIN_SESSION_TTL_MS = Math.max(1, ADMIN_SESSION_TTL_HOURS) * 60 * 60 * 1000;
 const MAX_BODY_MB = Number(process.env.MAX_BODY_MB || 80);
 const MAX_BODY_SIZE = Math.max(5, MAX_BODY_MB) * 1024 * 1024;
-const MAX_UPLOAD_MB = Number(process.env.MAX_UPLOAD_MB || 50);
+const MAX_UPLOAD_MB = Number(process.env.MAX_UPLOAD_MB || 20);
 const MAX_UPLOAD_SIZE = Math.max(5, MAX_UPLOAD_MB) * 1024 * 1024;
 const IMAGE_MAX_WIDTH = Number(process.env.IMAGE_MAX_WIDTH || 1800);
 const IMAGE_WEBP_QUALITY = Number(process.env.IMAGE_WEBP_QUALITY || 82);
+const IMAGE_THUMB_WIDTH = Number(process.env.IMAGE_THUMB_WIDTH || 720);
+const IMAGE_THUMB_QUALITY = Number(process.env.IMAGE_THUMB_QUALITY || 74);
+const MAX_IMAGE_PIXELS = Number(process.env.MAX_IMAGE_PIXELS || 40000000);
 if (!ADMIN_EMAIL || !ADMIN_PASSWORD || ADMIN_SESSION_SECRET.length < 32) {
   throw new Error("ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_SESSION_SECRET(32자 이상) 환경변수를 설정해 주세요.");
 }
@@ -35,6 +38,8 @@ const UPLOAD_DIR = process.env.UPLOAD_DIR
   ? path.resolve(process.env.UPLOAD_DIR)
   : path.join(PUBLIC_DIR, "uploads");
 const PRODUCT_UPLOAD_DIR = path.join(UPLOAD_DIR, "products");
+const PRODUCT_THUMBNAIL_DIR = path.join(UPLOAD_DIR, "thumbnails");
+const thumbnailTasks = new Map();
 let customsDataKey = null;
 
 const allowedStatuses = ["입금대기", "배송준비중", "배송중", "배송완료", "취소/반품"];
@@ -139,6 +144,7 @@ function copyDirectoryContents(sourceDir, targetDir) {
 function ensureRuntime() {
   ensureDir(DATA_DIR);
   ensureDir(PRODUCT_UPLOAD_DIR);
+  ensureDir(PRODUCT_THUMBNAIL_DIR);
   if (!fs.existsSync(DB_PATH)) {
     const bundledDbPath = path.join(ROOT_DIR, "data", "db.json");
     if (fs.existsSync(bundledDbPath) && path.resolve(bundledDbPath) !== path.resolve(DB_PATH)) {
@@ -566,6 +572,53 @@ function migrateLegacyProductImages(db) {
   return changed;
 }
 
+function productPrimarySource(product) {
+  return product?.images?.main?.[0] || product?.image || "";
+}
+
+function thumbnailDescriptor(source) {
+  const value = String(source || "");
+  if (!value.startsWith("/uploads/")) return null;
+  const relative = value.replace(/^\/uploads\//, "");
+  const originalPath = path.resolve(UPLOAD_DIR, relative);
+  if (!originalPath.startsWith(path.resolve(UPLOAD_DIR) + path.sep)) return null;
+  const name = `${crypto.createHash("sha256").update(value).digest("hex")}.webp`;
+  return { originalPath, thumbnailPath: path.join(PRODUCT_THUMBNAIL_DIR, name), url: `/uploads/thumbnails/${name}` };
+}
+
+async function ensureProductThumbnail(source) {
+  const descriptor = thumbnailDescriptor(source);
+  if (!descriptor || !fs.existsSync(descriptor.originalPath)) return "";
+  if (fs.existsSync(descriptor.thumbnailPath)) return descriptor.url;
+  if (thumbnailTasks.has(descriptor.thumbnailPath)) return thumbnailTasks.get(descriptor.thumbnailPath);
+  const task = (async () => {
+    const temporaryPath = `${descriptor.thumbnailPath}.${process.pid}.tmp.webp`;
+    try {
+      await sharp(descriptor.originalPath, { failOn: "none", limitInputPixels: MAX_IMAGE_PIXELS })
+        .rotate()
+        .resize({ width: IMAGE_THUMB_WIDTH, withoutEnlargement: true })
+        .webp({ quality: IMAGE_THUMB_QUALITY, effort: 4 })
+        .toFile(temporaryPath);
+      fs.renameSync(temporaryPath, descriptor.thumbnailPath);
+      return descriptor.url;
+    } finally {
+      if (fs.existsSync(temporaryPath)) fs.unlinkSync(temporaryPath);
+      thumbnailTasks.delete(descriptor.thumbnailPath);
+    }
+  })();
+  thumbnailTasks.set(descriptor.thumbnailPath, task);
+  return task;
+}
+
+function productThumbnailStatus(db) {
+  const sources = [...new Set((db.products || []).map(productPrimarySource).filter(Boolean))];
+  const pending = sources.filter((source) => {
+    const descriptor = thumbnailDescriptor(source);
+    return descriptor && fs.existsSync(descriptor.originalPath) && !fs.existsSync(descriptor.thumbnailPath);
+  });
+  return { total: sources.length, completed: sources.length - pending.length, pending };
+}
+
 async function optimizeAndStoreImageBuffer(buffer, {
   fileName = "product",
   folder = "products"
@@ -576,7 +629,7 @@ async function optimizeAndStoreImageBuffer(buffer, {
   const finalName = `${slug}-${Date.now()}-${crypto.randomBytes(6).toString("hex")}.webp`;
   const absoluteFilePath = path.join(targetDir, finalName);
 
-  const processed = sharp(buffer, { failOn: "none" })
+  const processed = sharp(buffer, { failOn: "none", limitInputPixels: MAX_IMAGE_PIXELS })
     .rotate()
     .resize({ width: IMAGE_MAX_WIDTH, withoutEnlargement: true })
     .webp({ quality: IMAGE_WEBP_QUALITY, effort: 4 });
@@ -585,8 +638,11 @@ async function optimizeAndStoreImageBuffer(buffer, {
   await processed.toFile(absoluteFilePath);
   const fileStat = fs.statSync(absoluteFilePath);
 
+  const url = normalizeUploadWebPath(path.posix.join("uploads", folder, finalName));
+  const thumbnailUrl = await ensureProductThumbnail(url);
   return {
-    url: normalizeUploadWebPath(path.posix.join("uploads", folder, finalName)),
+    url,
+    thumbnailUrl,
     width: metadata.width || 0,
     height: metadata.height || 0,
     size: fileStat.size,
@@ -1192,6 +1248,29 @@ async function handleApi(req, res, url) {
     return sendError(res, 401, "관리자 로그인이 필요합니다.");
   }
 
+  if (url.pathname === "/api/admin/product-thumbnails" && req.method === "GET") {
+    const status = productThumbnailStatus(db);
+    return send(res, 200, { total: status.total, completed: status.completed, pending: status.pending.length });
+  }
+
+  if (url.pathname === "/api/admin/product-thumbnails" && req.method === "POST") {
+    const body = await readBody(req);
+    const limit = Math.min(10, Math.max(1, Number(body.limit || 5)));
+    const before = productThumbnailStatus(db);
+    let created = 0;
+    let failed = 0;
+    for (const source of before.pending.slice(0, limit)) {
+      try {
+        if (await ensureProductThumbnail(source)) created += 1;
+      } catch (error) {
+        failed += 1;
+        console.error("[THUMBNAIL_ERROR]", source, error.message);
+      }
+    }
+    const after = productThumbnailStatus(db);
+    return send(res, 200, { total: after.total, completed: after.completed, pending: after.pending.length, created, failed });
+  }
+
   if (url.pathname === "/api/admin/uploads" && req.method === "POST") {
     const { fields, files } = await readMultipartFiles(req);
     const kind = String(fields.kind || "product").trim().toLowerCase();
@@ -1214,7 +1293,8 @@ async function handleApi(req, res, url) {
         width: saved.width,
         height: saved.height,
         format: saved.format,
-        url: saved.url
+        url: saved.url,
+        thumbnailUrl: saved.thumbnailUrl
       });
     }
 
@@ -1515,7 +1595,19 @@ function resolveRoute(pathname) {
   return routes[pathname] || pathname;
 }
 
-function serveStatic(req, res, url) {
+async function serveStatic(req, res, url) {
+  if (url.pathname === "/thumbnail") {
+    const source = String(url.searchParams.get("src") || "");
+    try {
+      const thumbnailUrl = await ensureProductThumbnail(source);
+      const descriptor = thumbnailDescriptor(source);
+      if (!thumbnailUrl || !descriptor) return send(res, 404, "썸네일을 찾을 수 없습니다.", "text/plain; charset=utf-8");
+      const data = await fs.promises.readFile(descriptor.thumbnailPath);
+      return send(res, 200, data, "image/webp", { "Cache-Control": "public, max-age=31536000, immutable" });
+    } catch (error) {
+      return send(res, 404, "썸네일을 만들 수 없습니다.", "text/plain; charset=utf-8");
+    }
+  }
   if (url.pathname === "/robots.txt") {
     return send(res, 200, `User-agent: *
 Allow: /
@@ -1556,7 +1648,7 @@ Sitemap: ${absoluteSiteUrl("/sitemap.xml")}
       }
       const ext = path.extname(uploadFilePath).toLowerCase();
       const type = mimeTypes[ext] || "application/octet-stream";
-      send(res, 200, data, type, { "Cache-Control": "public, max-age=86400, immutable" });
+      send(res, 200, data, type, { "Cache-Control": "public, max-age=31536000, immutable" });
     });
   }
 
@@ -1605,7 +1697,7 @@ http.createServer(async (req, res) => {
       return await handleApi(req, res, url);
     }
 
-    return serveStatic(req, res, url);
+    return await serveStatic(req, res, url);
   } catch (error) {
     console.error("[SERVER_ERROR]", error);
     return send(res, 500, { error: error.message || "서버 오류가 발생했습니다." });
