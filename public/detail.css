@@ -837,11 +837,22 @@ a {
 .detail-progressive-image {
   min-height: 180px;
   opacity: .96;
+  background: linear-gradient(100deg, #F3EFE8 20%, #FBF8F2 38%, #F3EFE8 56%);
+  background-size: 220% 100%;
+  animation: detailImageLoading 1.25s ease-in-out infinite;
   transition: opacity .25s ease;
 }
 
+.detail-progressive-image.preview-ready,
+.detail-progressive-image.preview-only,
 .detail-progressive-image.full-ready {
   opacity: 1;
+  animation: none;
+}
+
+@keyframes detailImageLoading {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
 }
 
 .detail-image-empty {

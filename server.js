@@ -445,6 +445,10 @@ function renderProductDetailHtml(db, product) {
   const primaryPreview = String(primarySource || "").startsWith("/uploads/")
     ? `/thumbnail?src=${encodeURIComponent(primarySource)}`
     : primarySource;
+  const firstDetailSource = Array.isArray(product.images?.detail) ? product.images.detail.find(Boolean) : "";
+  const firstDetailPreview = String(firstDetailSource || "").startsWith("/uploads/")
+    ? `/thumbnail?src=${encodeURIComponent(firstDetailSource)}`
+    : firstDetailSource;
   const seoMarkup = `
   <meta name="description" content="${escapeHtmlAttribute(description)}">
   <meta name="robots" content="index,follow,max-image-preview:large">
@@ -463,6 +467,7 @@ function renderProductDetailHtml(db, product) {
   <meta name="twitter:description" content="${escapeHtmlAttribute(description)}">
   <meta name="twitter:image" content="${escapeHtmlAttribute(representativeImage)}">
   ${primaryPreview ? `<link rel="preload" as="image" href="${escapeHtmlAttribute(primaryPreview)}" fetchpriority="high">` : ""}
+  ${firstDetailPreview ? `<link rel="preload" as="image" href="${escapeHtmlAttribute(firstDetailPreview)}">` : ""}
   <script>window.YOONSEUL_PRODUCT_ID=${Number(product.id)};window.YOONSEUL_PRODUCT_BOOTSTRAP=${bootstrapData};</script>
   <script type="application/ld+json">${structuredData}</script>`;
   return template

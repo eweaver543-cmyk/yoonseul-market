@@ -281,20 +281,27 @@ function renderDetailImages() {
   }
 
   list.innerHTML = detailImages.map((source, index) => `
-    <img class="detail-progressive-image" src="${thumbnailImageUrl(source)}" data-original="${safeHtml(source)}" alt="${safeHtml(state.product.name)} 상세 이미지 ${index + 1}" loading="lazy" decoding="async">
+    <img class="detail-progressive-image" src="${thumbnailImageUrl(source)}" data-original="${safeHtml(source)}" alt="${safeHtml(state.product.name)} 상세 이미지 ${index + 1}" loading="${index === 0 ? "eager" : "lazy"}" fetchpriority="${index === 0 ? "high" : "low"}" decoding="async">
   `).join("");
 
   const hydrateImage = (image) => {
     const original = image.dataset.original;
     if (!original || original === image.getAttribute("src")) return;
-    const full = new Image();
-    full.onload = () => {
-      image.src = original;
-      image.dataset.original = "";
-      image.classList.add("full-ready");
+    const loadOriginal = () => {
+      if (!image.dataset.original) return;
+      image.classList.add("preview-ready");
+      const full = new Image();
+      full.decoding = "async";
+      full.onload = () => {
+        image.src = original;
+        image.dataset.original = "";
+        image.classList.add("full-ready");
+      };
+      full.onerror = () => image.classList.add("preview-only");
+      full.src = original;
     };
-    full.onerror = () => image.classList.add("preview-only");
-    full.src = original;
+    if (image.complete && image.naturalWidth > 0) loadOriginal();
+    else image.addEventListener("load", loadOriginal, { once: true });
   };
 
   const images = [...list.querySelectorAll(".detail-progressive-image")];
