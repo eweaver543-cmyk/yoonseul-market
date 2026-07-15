@@ -1033,7 +1033,7 @@ function regenerateSummerSale(db, now = Date.now()) {
   const items = [];
   for (const brand of [...db.brands].sort((a, b) => Number(a.order || 0) - Number(b.order || 0))) {
     const candidates = activeProducts.filter((product) => Number(product.brandId) === Number(brand.id));
-    for (const product of shuffleItems(candidates).slice(0, 3)) {
+    for (const product of shuffleItems(candidates).slice(0, 4)) {
       items.push({
         productId: Number(product.id),
         brandId: Number(brand.id),

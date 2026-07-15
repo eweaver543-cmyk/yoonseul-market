@@ -46,7 +46,7 @@ async function loadSale() {
   const brands = (data.brands || []).filter((brand) => saleProducts.some((product) => Number(product.brandId) === Number(brand.id)));
   const content = document.querySelector("#saleContent");
   content.innerHTML = brands.length ? brands.map((brand) => {
-    const items = saleProducts.filter((product) => Number(product.brandId) === Number(brand.id)).slice(0, 3);
+    const items = saleProducts.filter((product) => Number(product.brandId) === Number(brand.id)).slice(0, 4);
     return `<section class="sale-brand"><header class="sale-brand-head"><div><p>CURATED BRAND SELECTION</p><h2>${escapeHtml(brand.koName)}</h2></div><a href="/?brand=${Number(brand.id)}#all">브랜드 전체보기 →</a></header><div class="sale-grid">${items.map((product) => `<article class="sale-card"><a href="${productPath(product)}"><span class="discount">${product.summerSale.discountRate}% OFF</span><img src="${escapeHtml(thumbnail(product))}" data-original="${escapeHtml(product.image || "")}" alt="${escapeHtml(product.name)}" loading="lazy" onerror="if(this.dataset.original){this.src=this.dataset.original;this.dataset.original=''}"><small>${escapeHtml(brand.enName || brand.koName)}</small><h3>${escapeHtml(product.name)}</h3><div class="sale-prices"><del>${won(product.summerSale.regularPrice)}</del><strong>${won(product.summerSale.salePrice)}</strong></div></a></article>`).join("")}</div></section>`;
   }).join("") : `<div class="sale-loading">현재 준비된 ${escapeHtml(saleName)} 상품이 없습니다.</div>`;
   clearInterval(refreshTimer);

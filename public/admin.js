@@ -1389,7 +1389,7 @@ function closeAdminReviewModal() {
 function summerSaleTemplate() {
   return `<section class="summer-admin-shell">
     <div class="manager-toolbar summer-admin-hero">
-      <div><p>SUMMER CLASSIC SALE</p><h2>여름세일 자동 할인</h2><span>각 브랜드 상품을 최대 3개씩 선정하고 3일마다 12–15% 할인율을 새로 적용합니다.</span></div>
+      <div><p>SUMMER CLASSIC SALE</p><h2>여름세일 자동 할인</h2><span>각 브랜드 상품을 최대 4개씩 선정하고 3일마다 12–15% 할인율을 새로 적용합니다.</span></div>
       <button class="primary-button" id="refreshSummerSale"><i class="fa-solid fa-rotate"></i> 지금 상품 교체</button>
     </div>
     <div class="summer-admin-controls">
