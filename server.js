@@ -41,6 +41,8 @@ const PRODUCT_UPLOAD_DIR = path.join(UPLOAD_DIR, "products");
 const PRODUCT_THUMBNAIL_DIR = path.join(UPLOAD_DIR, "thumbnails");
 const thumbnailTasks = new Map();
 let customsDataKey = null;
+let memoryDbCache = null;
+let memoryDbMtimeMs = 0;
 
 const allowedStatuses = ["입금대기", "배송준비중", "배송중", "배송완료", "취소/반품"];
 
@@ -198,10 +200,15 @@ function normalizeDbShape(db) {
 
 function readDb() {
   ensureRuntime();
+  const fileStat = fs.statSync(DB_PATH);
+  if (memoryDbCache && memoryDbMtimeMs === fileStat.mtimeMs) return memoryDbCache;
   const db = normalizeDbShape(JSON.parse(fs.readFileSync(DB_PATH, "utf8")));
   if (migrateLegacyProductImages(db)) {
     writeDb(db);
+    return memoryDbCache;
   }
+  memoryDbCache = db;
+  memoryDbMtimeMs = fileStat.mtimeMs;
   return db;
 }
 
@@ -211,6 +218,8 @@ function writeDb(db) {
   const tempPath = `${DB_PATH}.tmp`;
   fs.writeFileSync(tempPath, JSON.stringify(next, null, 2), "utf8");
   fs.renameSync(tempPath, DB_PATH);
+  memoryDbCache = next;
+  memoryDbMtimeMs = fs.statSync(DB_PATH).mtimeMs;
 }
 
 function send(res, status, body, type = "application/json; charset=utf-8", extraHeaders = {}) {
@@ -911,6 +920,47 @@ function calculateBestSellerRankings(requests, products, now = Date.now()) {
     .slice(0, 8)]));
 }
 
+function storefrontProduct(product) {
+  const primaryImage = productPrimarySource(product);
+  return {
+    id: Number(product.id || 0),
+    brandId: Number(product.brandId || 0),
+    categoryId: Number(product.categoryId || 0),
+    name: String(product.name || ""),
+    price: Number(product.price || 0),
+    oldPrice: Number(product.oldPrice || product.price || 0),
+    image: primaryImage,
+    status: String(product.status || "판매중"),
+    createdAt: product.createdAt || ""
+  };
+}
+
+function visiblePromotions(db) {
+  const today = seoulDateKey();
+  const promotions = (db.siteSettings.promotions || [])
+    .filter((item) => isPromotionVisible(item, today))
+    .sort((a, b) => String(a.endAt || "9999-12-31").localeCompare(String(b.endAt || "9999-12-31")) || String(b.startAt || "").localeCompare(String(a.startAt || "")));
+  return { today, promotions };
+}
+
+function storefrontPayload(db) {
+  const promotionData = visiblePromotions(db);
+  return {
+    generatedAt: new Date().toISOString(),
+    brands: [...db.brands].sort((a, b) => Number(a.order || 0) - Number(b.order || 0)),
+    categories: db.categories,
+    products: db.products.filter((product) => product.status !== "삭제").map(storefrontProduct),
+    periods: { realtime: "최근 24시간", weekly: "최근 7일", monthly: "최근 30일" },
+    rankings: calculateBestSellerRankings(db.requests, db.products),
+    promotions: promotionData.promotions,
+    today: promotionData.today,
+    siteSettings: {
+      designBanners: db.siteSettings.designBanners || [],
+      inquiryChannels: db.siteSettings.inquiryChannels || {}
+    }
+  };
+}
+
 async function handleApi(req, res, url) {
   const db = readDb();
 
@@ -920,6 +970,24 @@ async function handleApi(req, res, url) {
       env: NODE_ENV,
       uptime: Math.round(process.uptime()),
       now: new Date().toISOString()
+    });
+  }
+
+  if (url.pathname === "/api/storefront" && req.method === "GET") {
+    return send(res, 200, storefrontPayload(db), "application/json; charset=utf-8", {
+      "Cache-Control": "public, max-age=15, stale-while-revalidate=120"
+    });
+  }
+
+  const publicProductMatch = url.pathname.match(/^\/api\/products\/(\d+)$/);
+  if (publicProductMatch && req.method === "GET") {
+    const product = db.products.find((item) => Number(item.id) === Number(publicProductMatch[1]) && !["삭제", "판매중지"].includes(String(item.status || "")));
+    if (!product) return sendError(res, 404, "상품을 찾을 수 없습니다.");
+    const brand = db.brands.find((item) => Number(item.id) === Number(product.brandId)) || null;
+    const categoryGroup = db.categories.find((entry) => Number(entry.brandId) === Number(product.brandId));
+    const category = categoryGroup?.items?.find((item) => Number(item.id) === Number(product.categoryId)) || null;
+    return send(res, 200, { product, brand, category }, "application/json; charset=utf-8", {
+      "Cache-Control": "public, max-age=30, stale-while-revalidate=120"
     });
   }
 
@@ -948,11 +1016,7 @@ async function handleApi(req, res, url) {
   }
 
   if (url.pathname === "/api/promotions" && req.method === "GET") {
-    const today = seoulDateKey();
-    const promotions = (db.siteSettings.promotions || [])
-      .filter((item) => isPromotionVisible(item, today))
-      .sort((a, b) => String(a.endAt || "9999-12-31").localeCompare(String(b.endAt || "9999-12-31")) || String(b.startAt || "").localeCompare(String(a.startAt || "")));
-    return send(res, 200, { today, promotions });
+    return send(res, 200, visiblePromotions(db));
   }
 
   if (url.pathname === "/api/member/orders" && req.method === "GET") {
@@ -1669,12 +1733,22 @@ Sitemap: ${absoluteSiteUrl("/sitemap.xml")}
     const isUiAsset = [".js", ".css", ".json"].includes(ext);
     const noindexPages = new Set(["/admin.html", "/join.html", "/mypage.html", "/cart.html", "/checkout.html", "/apply.html"]);
     const extraHeaders = noindexPages.has(safeTarget) ? { "X-Robots-Tag": "noindex, nofollow" } : {};
+    const cacheHeaders = isHtml
+      ? { "Cache-Control": "public, max-age=60, stale-while-revalidate=300", ...extraHeaders }
+      : isUiAsset
+        ? { "Cache-Control": "public, max-age=300, stale-while-revalidate=86400", ...extraHeaders }
+        : { "Cache-Control": "public, max-age=86400, immutable", ...extraHeaders };
+    let responseData = data;
+    if (safeTarget === "/index.html") {
+      const bootstrap = JSON.stringify(storefrontPayload(readDb())).replace(/</g, "\\u003c");
+      responseData = data.toString("utf8").replace("</head>", `<script>window.YOONSEUL_STOREFRONT_BOOTSTRAP=${bootstrap};</script></head>`);
+    }
     send(
       res,
       200,
-      data,
+      responseData,
       type,
-      isHtml || isUiAsset ? extraHeaders : { "Cache-Control": "public, max-age=86400, immutable", ...extraHeaders }
+      cacheHeaders
     );
   });
 }

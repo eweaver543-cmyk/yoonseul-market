@@ -8,7 +8,8 @@ const state = {
   selectedColor: "",
   selectedSize: "",
   selectedItems: [],
-  optionProductId: null
+  optionProductId: null,
+  loadingFullDetails: false
 };
 
 const DETAIL_PREVIEW_KEY = "yoonseul-detail-preview";
@@ -408,6 +409,10 @@ function renderProduct() {
   renderDetailImages();
   renderReviews();
   updateTotal();
+  ["#buyButton", "#cartButton"].forEach((selector) => {
+    const button = document.querySelector(selector);
+    if (button) button.disabled = state.loadingFullDetails;
+  });
 }
 
 async function loadDetail() {
@@ -419,6 +424,7 @@ async function loadDetail() {
     const preview = JSON.parse(sessionStorage.getItem(DETAIL_PREVIEW_KEY) || "null");
     const isFresh = preview && Date.now() - Number(preview.savedAt || 0) < 10 * 60 * 1000;
     if (isFresh && Number(preview.product?.id) === Number(id)) {
+      state.loadingFullDetails = true;
       state.product = preview.product;
       state.brand = preview.brand || null;
       state.category = preview.category || null;
@@ -431,19 +437,20 @@ async function loadDetail() {
     }
   } catch {}
 
-  const response = await fetch("/api/catalog").catch(() => null);
+  const response = await fetch(`/api/products/${encodeURIComponent(id)}`).catch(() => null);
   if (!response?.ok) {
     if (renderedPreview) return;
-    throw new Error("CATALOG_FAILED");
+    throw new Error("PRODUCT_DETAIL_FAILED");
   }
 
-  const catalog = await response.json();
-  const product = (catalog.products || []).find((item) => Number(item.id) === Number(id));
+  const detailData = await response.json();
+  const product = detailData.product;
   if (!product) throw new Error("NOT_FOUND");
 
   state.product = product;
-  state.brand = (catalog.brands || []).find((brand) => Number(brand.id) === Number(product.brandId)) || null;
-  state.category = findCategory(catalog.categories || [], product);
+  state.loadingFullDetails = false;
+  state.brand = detailData.brand || null;
+  state.category = detailData.category || null;
   state.images = normalizeImages(product);
 
   if (!state.images.length) {

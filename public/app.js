@@ -55,6 +55,8 @@ const won = (value) => `₩${Number(value).toLocaleString("ko-KR")}`;
 const brandOf = (product) => brands.find((brand) => Number(brand.id) === Number(product.brandId)) || { id: 0, koName: "미지정", enName: "UNASSIGNED" };
 const PRODUCT_PLACEHOLDER_IMAGE = "/images/product-placeholder.svg";
 const DETAIL_PREVIEW_KEY = "yoonseul-detail-preview";
+const STOREFRONT_CACHE_KEY = "yoonseul-storefront-cache-v1";
+const STOREFRONT_CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
 const productPrimaryImage = (product) => product.images?.main?.[0] || product.image || PRODUCT_PLACEHOLDER_IMAGE;
 const productThumbnailImage = (product) => {
   const original = productPrimaryImage(product);
@@ -601,17 +603,20 @@ function renderDesignBanners() {
   setTimeout(() => openNoticePopup(popupItem), 250);
 }
 
-async function loadCatalog(silent = false) {
-  const response = await fetch("/api/catalog");
-  if (!response.ok) throw new Error("CATALOG_FAILED");
-  const data = await response.json();
+function applyStorefrontData(data, silent = false) {
   if (!Array.isArray(data.products) || !Array.isArray(data.brands)) throw new Error("CATALOG_INVALID");
-  const signature = JSON.stringify([data.brands, data.products, data.categories]);
+  const signature = JSON.stringify([data.brands, data.products, data.categories, data.rankings, data.promotions, data.siteSettings]);
   if (silent && signature === catalogSignature) return;
   catalogSignature = signature;
   brands = data.brands;
   products = data.products;
   categories = data.categories || [];
+  if (data.rankings) salesRankings = data.rankings;
+  if (data.periods) rankingPeriods = data.periods;
+  if (Array.isArray(data.promotions)) promotions = data.promotions;
+  const settings = data.siteSettings || {};
+  if (Array.isArray(settings.designBanners)) localStorage.setItem(DESIGN_STORAGE_KEY, JSON.stringify(normalizeDesignBanners(settings.designBanners)));
+  if (settings.inquiryChannels && Object.keys(settings.inquiryChannels).length) localStorage.setItem(INQUIRY_CHANNEL_STORAGE_KEY, JSON.stringify(settings.inquiryChannels));
   if (initialBrandId && brands.some((brand) => Number(brand.id) === Number(initialBrandId))) {
     activeBrandId = initialBrandId;
     activeCategoryId = 0;
@@ -622,6 +627,49 @@ async function loadCatalog(silent = false) {
   renderBrandControls();
   renderBest();
   renderCatalog();
+  renderPromotions();
+  renderDesignBanners();
+  renderInquiryChannels();
+  const updated = document.querySelector("#promotionUpdatedAt");
+  if (updated) updated.textContent = promotions.length ? `${data.today || ""} 기준` : "";
+}
+
+async function loadStorefront(silent = false) {
+  const response = await fetch("/api/storefront");
+  if (!response.ok) throw new Error("STOREFRONT_FAILED");
+  const data = await response.json();
+  applyStorefrontData(data, silent);
+  try {
+    localStorage.setItem(STOREFRONT_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), data }));
+  } catch (_) {}
+  return data;
+}
+
+function restoreCachedStorefront() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(STOREFRONT_CACHE_KEY) || "null");
+    if (!cached?.data || Date.now() - Number(cached.savedAt || 0) > STOREFRONT_CACHE_MAX_AGE) return false;
+    applyStorefrontData(cached.data);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function restoreEmbeddedStorefront() {
+  const data = window.YOONSEUL_STOREFRONT_BOOTSTRAP;
+  if (!data?.products || !data?.brands) return false;
+  try {
+    applyStorefrontData(data);
+    localStorage.setItem(STOREFRONT_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), data }));
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+async function loadCatalog(silent = false) {
+  return loadStorefront(silent);
 }
 
 document.querySelector("#searchForm").addEventListener("submit", (event) => {
@@ -907,17 +955,14 @@ async function loadServerSiteSettings() {
   renderDesignBanners();
   renderInquiryChannels();
 }
-loadServerSiteSettings();
 syncHeaderMemberState();
 updateHeaderScrollShadow();
-document.querySelector("#bestGrid").innerHTML = '<div class="best-empty-state" role="status"><strong>상품을 불러오는 중입니다.</strong><span>잠시만 기다려 주세요.</span></div>';
-loadCatalog()
-  .then(() => Promise.allSettled([loadBestSellers(), loadPromotions()]))
+const restoredStorefront = restoreEmbeddedStorefront() || restoreCachedStorefront();
+if (!restoredStorefront) document.querySelector("#bestGrid").innerHTML = '<div class="best-empty-state" role="status"><strong>상품을 불러오는 중입니다.</strong><span>잠시만 기다려 주세요.</span></div>';
+loadStorefront(restoredStorefront)
   .catch(() => {
+    if (restoredStorefront) return;
     document.querySelector("#bestGrid").innerHTML = '<div class="best-empty-state"><strong>상품을 불러오지 못했습니다.</strong><span>잠시 후 새로고침해 주세요.</span></div>';
     showToast("홈페이지 정보를 불러오지 못했습니다.");
   });
-setInterval(() => loadCatalog(true), 10000);
-setInterval(() => loadBestSellers().catch(() => {}), 10000);
-setInterval(() => loadPromotions().catch(() => {}), 10000);
-setInterval(loadServerSiteSettings, 10000);
+setInterval(() => loadStorefront(true).catch(() => {}), 60000);
