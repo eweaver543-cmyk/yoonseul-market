@@ -1501,6 +1501,23 @@ async function handleApi(req, res, url) {
     return send(res, 201, category);
   }
 
+  if (url.pathname === "/api/admin/categories/reorder" && req.method === "POST") {
+    const body = await readBody(req);
+    const brandId = Number(body.brandId);
+    const categoryIds = Array.isArray(body.categoryIds) ? body.categoryIds.map(Number) : [];
+    const group = db.categories.find((item) => Number(item.brandId) === brandId);
+    if (!group) return sendError(res, 404, "카테고리 그룹을 찾을 수 없습니다.");
+    const currentIds = (group.items || []).map((item) => Number(item.id));
+    const isSameSet = categoryIds.length === currentIds.length
+      && new Set(categoryIds).size === categoryIds.length
+      && categoryIds.every((id) => currentIds.includes(id));
+    if (!isSameSet) return sendError(res, 400, "소분류 순서 정보가 올바르지 않습니다.");
+    const itemMap = new Map(group.items.map((item) => [Number(item.id), item]));
+    group.items = categoryIds.map((id, index) => ({ ...itemMap.get(id), order: index + 1 }));
+    writeDb(db);
+    return send(res, 200, { ok: true, brandId, items: group.items });
+  }
+
   const categoryMatch = url.pathname.match(/^\/api\/admin\/categories\/(\d+)$/);
   if (categoryMatch && req.method === "PUT") {
     const categoryId = Number(categoryMatch[1]);

@@ -480,8 +480,8 @@ function categoryListTemplate(brandId) {
   const brand = dashboardData.brands.find((item) => Number(item.id) === Number(brandId));
   const items = categoryItems(brandId);
   if (!items.length) return `<div class="category-empty"><i class="fa-solid fa-layer-group"></i><p><b>${brand?.koName || "선택한 대분류"}</b>에 등록된 소분류가 없습니다.</p></div>`;
-  return `<div class="category-list-head"><strong>${brand?.koName || ""} 소분류</strong><span>${items.length}개</span></div>
-    <div class="category-chip-grid">${items.map((item) => `<article><span><small>#${item.id}</small><b>${item.name}</b></span><div><button class="manager-edit-category" data-category="${item.id}"><i class="fa-solid fa-pen"></i> 수정</button><button class="manager-delete-category danger" data-category="${item.id}"><i class="fa-regular fa-trash-can"></i> 삭제</button></div></article>`).join("")}</div>`;
+  return `<div class="category-list-head"><strong>${brand?.koName || ""} 소분류</strong><span>끌어서 이동하거나 화살표를 누르세요 · ${items.length}개</span></div>
+    <div class="category-chip-grid">${items.map((item, index) => `<article draggable="true" data-category-item="${item.id}"><span><small><i class="fa-solid fa-grip-vertical"></i> ${index + 1}번째 · #${item.id}</small><b>${item.name}</b></span><div><button class="manager-move-category" data-category="${item.id}" data-direction="up" ${index === 0 ? "disabled" : ""} aria-label="${item.name} 위로 이동"><i class="fa-solid fa-arrow-up"></i></button><button class="manager-move-category" data-category="${item.id}" data-direction="down" ${index === items.length - 1 ? "disabled" : ""} aria-label="${item.name} 아래로 이동"><i class="fa-solid fa-arrow-down"></i></button><button class="manager-edit-category" data-category="${item.id}"><i class="fa-solid fa-pen"></i> 수정</button><button class="manager-delete-category danger" data-category="${item.id}"><i class="fa-regular fa-trash-can"></i> 삭제</button></div></article>`).join("")}</div>`;
 }
 
 function isDesignBannerActive(item) {
@@ -1742,8 +1742,55 @@ function renderCategoryManagerList() {
 }
 
 function bindCategoryManagerActions() {
+  document.querySelectorAll(".manager-move-category").forEach((button) => button.addEventListener("click", () => moveManagerCategory(Number(button.dataset.category), button.dataset.direction)));
   document.querySelectorAll(".manager-edit-category").forEach((button) => button.addEventListener("click", () => editManagerCategory(Number(button.dataset.category))));
   document.querySelectorAll(".manager-delete-category").forEach((button) => button.addEventListener("click", () => deleteManagerCategory(Number(button.dataset.category))));
+  let draggedCategoryId = 0;
+  document.querySelectorAll("[data-category-item]").forEach((item) => {
+    item.addEventListener("dragstart", () => {
+      draggedCategoryId = Number(item.dataset.categoryItem);
+      item.classList.add("dragging");
+    });
+    item.addEventListener("dragend", () => item.classList.remove("dragging"));
+    item.addEventListener("dragover", (event) => event.preventDefault());
+    item.addEventListener("drop", async (event) => {
+      event.preventDefault();
+      const targetCategoryId = Number(item.dataset.categoryItem);
+      if (!draggedCategoryId || draggedCategoryId === targetCategoryId) return;
+      await reorderManagerCategory(draggedCategoryId, targetCategoryId);
+    });
+  });
+}
+
+async function saveManagerCategoryOrder(categoryIds) {
+  const brandId = Number(document.querySelector("#categoryBrandManager")?.value || 0);
+  const saved = await categoryRequest("/api/admin/categories/reorder", "POST", { brandId, categoryIds });
+  if (!saved) return false;
+  dashboardData = await adminApi("/api/admin/dashboard");
+  renderCategoryManagerList();
+  showToast("소분류 순서를 저장했습니다. 홈페이지에도 같은 순서로 반영됩니다.");
+  return true;
+}
+
+async function moveManagerCategory(categoryId, direction) {
+  const brandId = Number(document.querySelector("#categoryBrandManager")?.value || 0);
+  const ids = categoryItems(brandId).map((item) => Number(item.id));
+  const index = ids.indexOf(Number(categoryId));
+  const nextIndex = direction === "up" ? index - 1 : index + 1;
+  if (index < 0 || nextIndex < 0 || nextIndex >= ids.length) return;
+  [ids[index], ids[nextIndex]] = [ids[nextIndex], ids[index]];
+  await saveManagerCategoryOrder(ids);
+}
+
+async function reorderManagerCategory(sourceId, targetId) {
+  const brandId = Number(document.querySelector("#categoryBrandManager")?.value || 0);
+  const ids = categoryItems(brandId).map((item) => Number(item.id));
+  const sourceIndex = ids.indexOf(Number(sourceId));
+  const targetIndex = ids.indexOf(Number(targetId));
+  if (sourceIndex < 0 || targetIndex < 0) return;
+  const [moved] = ids.splice(sourceIndex, 1);
+  ids.splice(targetIndex, 0, moved);
+  await saveManagerCategoryOrder(ids);
 }
 
 async function addManagerCategory() {
