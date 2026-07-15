@@ -834,6 +834,16 @@ a {
   background: var(--warm);
 }
 
+.detail-progressive-image {
+  min-height: 180px;
+  opacity: .96;
+  transition: opacity .25s ease;
+}
+
+.detail-progressive-image.full-ready {
+  opacity: 1;
+}
+
 .detail-image-empty {
   border: 1px dashed #D8CDBD;
   border-radius: 10px;

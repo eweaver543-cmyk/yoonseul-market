@@ -281,8 +281,35 @@ function renderDetailImages() {
   }
 
   list.innerHTML = detailImages.map((source, index) => `
-    <img src="${source}" alt="${safeHtml(state.product.name)} 상세 이미지 ${index + 1}" loading="lazy">
+    <img class="detail-progressive-image" src="${thumbnailImageUrl(source)}" data-original="${safeHtml(source)}" alt="${safeHtml(state.product.name)} 상세 이미지 ${index + 1}" loading="lazy" decoding="async">
   `).join("");
+
+  const hydrateImage = (image) => {
+    const original = image.dataset.original;
+    if (!original || original === image.getAttribute("src")) return;
+    const full = new Image();
+    full.onload = () => {
+      image.src = original;
+      image.dataset.original = "";
+      image.classList.add("full-ready");
+    };
+    full.onerror = () => image.classList.add("preview-only");
+    full.src = original;
+  };
+
+  const images = [...list.querySelectorAll(".detail-progressive-image")];
+  if (!("IntersectionObserver" in window)) {
+    images.forEach(hydrateImage);
+    return;
+  }
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      observer.unobserve(entry.target);
+      hydrateImage(entry.target);
+    });
+  }, { rootMargin: "500px 0px" });
+  images.forEach((image) => observer.observe(image));
 }
 
 function renderPrice() {
@@ -420,10 +447,23 @@ async function loadDetail() {
   if (!id) throw new Error("NO_ID");
 
   let renderedPreview = false;
+  const bootstrap = window.YOONSEUL_PRODUCT_BOOTSTRAP;
+  if (bootstrap?.product && Number(bootstrap.product.id) === Number(id)) {
+    state.loadingFullDetails = false;
+    state.product = bootstrap.product;
+    state.brand = bootstrap.brand || null;
+    state.category = bootstrap.category || null;
+    state.images = normalizeImages(state.product);
+    if (!state.images.length) {
+      state.images = ["https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1200&q=86"];
+    }
+    renderProduct();
+    renderedPreview = true;
+  }
   try {
     const preview = JSON.parse(sessionStorage.getItem(DETAIL_PREVIEW_KEY) || "null");
     const isFresh = preview && Date.now() - Number(preview.savedAt || 0) < 10 * 60 * 1000;
-    if (isFresh && Number(preview.product?.id) === Number(id)) {
+    if (!renderedPreview && isFresh && Number(preview.product?.id) === Number(id)) {
       state.loadingFullDetails = true;
       state.product = preview.product;
       state.brand = preview.brand || null;

@@ -432,12 +432,19 @@ function productStructuredData(product, brand, description, canonicalUrl, imageU
 function renderProductDetailHtml(db, product) {
   const template = fs.readFileSync(path.join(PUBLIC_DIR, "detail.html"), "utf8");
   const brand = db.brands.find((item) => Number(item.id) === Number(product.brandId));
+  const categoryGroup = db.categories.find((entry) => Number(entry.brandId) === Number(product.brandId));
+  const category = categoryGroup?.items?.find((item) => Number(item.id) === Number(product.categoryId)) || null;
   const title = `${product.name} | 윤슬마켓`;
   const description = productSeoDescription(product, brand);
   const canonicalUrl = absoluteSiteUrl(productPublicPath(product));
   const imageUrls = productPublicImages(product).map(absoluteSiteUrl);
   const representativeImage = imageUrls[0] || absoluteSiteUrl("/images/product-placeholder.svg");
   const structuredData = productStructuredData(product, brand, description, canonicalUrl, imageUrls);
+  const bootstrapData = JSON.stringify({ product, brand: brand || null, category }).replace(/</g, "\\u003c");
+  const primarySource = productPrimarySource(product);
+  const primaryPreview = String(primarySource || "").startsWith("/uploads/")
+    ? `/thumbnail?src=${encodeURIComponent(primarySource)}`
+    : primarySource;
   const seoMarkup = `
   <meta name="description" content="${escapeHtmlAttribute(description)}">
   <meta name="robots" content="index,follow,max-image-preview:large">
@@ -455,7 +462,8 @@ function renderProductDetailHtml(db, product) {
   <meta name="twitter:title" content="${escapeHtmlAttribute(title)}">
   <meta name="twitter:description" content="${escapeHtmlAttribute(description)}">
   <meta name="twitter:image" content="${escapeHtmlAttribute(representativeImage)}">
-  <script>window.YOONSEUL_PRODUCT_ID=${Number(product.id)};</script>
+  ${primaryPreview ? `<link rel="preload" as="image" href="${escapeHtmlAttribute(primaryPreview)}" fetchpriority="high">` : ""}
+  <script>window.YOONSEUL_PRODUCT_ID=${Number(product.id)};window.YOONSEUL_PRODUCT_BOOTSTRAP=${bootstrapData};</script>
   <script type="application/ld+json">${structuredData}</script>`;
   return template
     .replace(/<title>[^<]*<\/title>/i, `<title>${escapeHtmlAttribute(title)}</title>`)
