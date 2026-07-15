@@ -422,7 +422,36 @@ function productStructuredData(product, brand, description, canonicalUrl, imageU
       url: canonicalUrl,
       priceCurrency: "KRW",
       price: Number(product?.price || 0),
-      availability
+      availability,
+      shippingDetails: {
+        "@type": "OfferShippingDetails",
+        shippingDestination: {
+          "@type": "DefinedRegion",
+          addressCountry: "KR"
+        },
+        shippingRate: {
+          "@type": "MonetaryAmount",
+          value: 0,
+          currency: "KRW"
+        },
+        deliveryTime: {
+          "@type": "ShippingDeliveryTime",
+          transitTime: {
+            "@type": "QuantitativeValue",
+            minValue: 7,
+            maxValue: 14,
+            unitCode: "DAY"
+          }
+        }
+      },
+      hasMerchantReturnPolicy: {
+        "@type": "MerchantReturnPolicy",
+        applicableCountry: "KR",
+        returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+        merchantReturnDays: 7,
+        returnMethod: "https://schema.org/ReturnByMail",
+        returnFees: "https://schema.org/ReturnFeesCustomerResponsibility"
+      }
     }
   };
   if (imageUrls.length) data.image = imageUrls;
