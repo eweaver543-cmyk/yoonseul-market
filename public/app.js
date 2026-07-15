@@ -192,11 +192,11 @@ function syncHeaderMemberState() {
   }
 }
 
-function cardTemplate(product, rank, sales) {
+function cardTemplate(product, rank, sales, priority = false) {
   const brand = brandOf(product);
   const detailUrl = productDetailUrl(product);
   return `<article class="product-card" data-product="${product.id}">
-    <div class="product-image"><a class="product-image-link" href="${detailUrl}" aria-label="${escapeHtml(product.name)} 상세보기"><img src="${escapeHtml(productPrimaryImage(product))}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${PRODUCT_PLACEHOLDER_IMAGE}'"></a>${rank ? `<span class="rank-number">${rank}</span>` : ""}<button class="heart-button" data-wishlist="${product.id}" aria-label="${escapeHtml(product.name)} 찜하기">♡</button></div>
+    <div class="product-image"><a class="product-image-link" href="${detailUrl}" aria-label="${escapeHtml(product.name)} 상세보기"><img src="${escapeHtml(productPrimaryImage(product))}" alt="${escapeHtml(product.name)}" loading="${priority ? "eager" : "lazy"}" decoding="async"${priority ? ' fetchpriority="high"' : ""} onerror="this.onerror=null;this.src='${PRODUCT_PLACEHOLDER_IMAGE}'"></a>${rank ? `<span class="rank-number">${rank}</span>` : ""}<button class="heart-button" data-wishlist="${product.id}" aria-label="${escapeHtml(product.name)} 찜하기">♡</button></div>
     <div class="card-info"><small>${escapeHtml(brand.enName)}</small><h3><a class="product-title-link" href="${detailUrl}">${escapeHtml(product.name)}</a></h3>${sales ? `<span class="sales-count">판매 ${Number(sales.units || 0).toLocaleString("ko-KR")}개 · 주문 ${Number(sales.orderCount || 0).toLocaleString("ko-KR")}건</span>` : ""}<strong>${won(product.price)}</strong><del>${won(product.oldPrice)}</del><button class="add-button" data-cart="${product.id}">장바구니 담기</button></div>
   </article>`;
 }
@@ -263,8 +263,8 @@ function renderBest(type = activeRank) {
     .slice(0, 8);
   const fallbackProducts = randomBestProducts(ranked.map((entry) => entry.product.id), 8 - ranked.length);
   const bestCards = [
-    ...ranked.map((entry, index) => cardTemplate(entry.product, index + 1, entry.sales)),
-    ...fallbackProducts.map((product) => cardTemplate(product))
+    ...ranked.map((entry, index) => cardTemplate(entry.product, index + 1, entry.sales, index < 2)),
+    ...fallbackProducts.map((product, index) => cardTemplate(product, undefined, undefined, ranked.length + index < 2))
   ];
   const description = document.querySelector("#bestPeriodDescription");
   if (description) description.textContent = ranked.length && fallbackProducts.length
@@ -311,7 +311,7 @@ function renderCatalog() {
   const result = filteredProducts();
   const visibleProducts = result;
   renderBrandCollectionHeader(visibleProducts.length);
-  document.querySelector("#productGrid").innerHTML = visibleProducts.map((product) => cardTemplate(product)).join("");
+  document.querySelector("#productGrid").innerHTML = visibleProducts.map((product, index) => cardTemplate(product, undefined, undefined, index < 4)).join("");
   document.querySelector("#productGrid").hidden = visibleProducts.length === 0;
   document.querySelector("#emptyState").hidden = visibleProducts.length !== 0;
   document.querySelector("#productTotal").textContent = `총 ${visibleProducts.length}개`;
@@ -597,7 +597,9 @@ function renderDesignBanners() {
 
 async function loadCatalog(silent = false) {
   const response = await fetch("/api/catalog");
+  if (!response.ok) throw new Error("CATALOG_FAILED");
   const data = await response.json();
+  if (!Array.isArray(data.products) || !Array.isArray(data.brands)) throw new Error("CATALOG_INVALID");
   const signature = JSON.stringify([data.brands, data.products, data.categories]);
   if (silent && signature === catalogSignature) return;
   catalogSignature = signature;
@@ -902,7 +904,13 @@ async function loadServerSiteSettings() {
 loadServerSiteSettings();
 syncHeaderMemberState();
 updateHeaderScrollShadow();
-Promise.all([loadCatalog(), loadBestSellers(), loadPromotions()]).catch(() => showToast("홈페이지 정보를 불러오지 못했습니다."));
+document.querySelector("#bestGrid").innerHTML = '<div class="best-empty-state" role="status"><strong>상품을 불러오는 중입니다.</strong><span>잠시만 기다려 주세요.</span></div>';
+loadCatalog()
+  .then(() => Promise.allSettled([loadBestSellers(), loadPromotions()]))
+  .catch(() => {
+    document.querySelector("#bestGrid").innerHTML = '<div class="best-empty-state"><strong>상품을 불러오지 못했습니다.</strong><span>잠시 후 새로고침해 주세요.</span></div>';
+    showToast("홈페이지 정보를 불러오지 못했습니다.");
+  });
 setInterval(() => loadCatalog(true), 10000);
 setInterval(() => loadBestSellers().catch(() => {}), 10000);
 setInterval(() => loadPromotions().catch(() => {}), 10000);
