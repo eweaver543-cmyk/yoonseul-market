@@ -402,10 +402,18 @@ function productSeoDescription(product, brand) {
   return (rawDescription || fallback).slice(0, 160);
 }
 
-function productStructuredData(product, brand, description, canonicalUrl, imageUrls) {
+function productStructuredData(db, product, brand, description, canonicalUrl, imageUrls) {
   const availability = String(product?.status || "") === "품절"
     ? "https://schema.org/OutOfStock"
     : "https://schema.org/InStock";
+  const publishedReviews = (db?.siteSettings?.reviews || []).filter((review) => {
+    const rating = Number(review?.rating || 0);
+    return Number(review?.productId || 0) === Number(product?.id || 0)
+      && String(review?.status || "published") !== "hidden"
+      && rating >= 1
+      && rating <= 5
+      && String(review?.content || "").trim();
+  });
   const data = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -455,6 +463,31 @@ function productStructuredData(product, brand, description, canonicalUrl, imageU
     }
   };
   if (imageUrls.length) data.image = imageUrls;
+  if (publishedReviews.length) {
+    const ratingTotal = publishedReviews.reduce((sum, review) => sum + Number(review.rating), 0);
+    data.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: Number((ratingTotal / publishedReviews.length).toFixed(2)),
+      reviewCount: publishedReviews.length,
+      bestRating: 5,
+      worstRating: 1
+    };
+    data.review = publishedReviews.map((review) => ({
+      "@type": "Review",
+      author: {
+        "@type": "Person",
+        name: String(review.userName || "구매 고객")
+      },
+      datePublished: String(review.createdAt || "").slice(0, 10) || undefined,
+      reviewBody: String(review.content).trim(),
+      reviewRating: {
+        "@type": "Rating",
+        ratingValue: Number(review.rating),
+        bestRating: 5,
+        worstRating: 1
+      }
+    }));
+  }
   return JSON.stringify(data).replace(/</g, "\\u003c");
 }
 
@@ -468,7 +501,7 @@ function renderProductDetailHtml(db, product) {
   const canonicalUrl = absoluteSiteUrl(productPublicPath(product));
   const imageUrls = productPublicImages(product).map(absoluteSiteUrl);
   const representativeImage = imageUrls[0] || absoluteSiteUrl("/images/product-placeholder.svg");
-  const structuredData = productStructuredData(product, brand, description, canonicalUrl, imageUrls);
+  const structuredData = productStructuredData(db, product, brand, description, canonicalUrl, imageUrls);
   const bootstrapData = JSON.stringify({ product, brand: brand || null, category }).replace(/</g, "\\u003c");
   const primarySource = productPrimarySource(product);
   const primaryPreview = String(primarySource || "").startsWith("/uploads/")
