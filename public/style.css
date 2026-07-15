@@ -881,3 +881,9 @@ body{padding-top:82px}
 .product-image-link{display:block;width:100%;height:100%;color:inherit;text-decoration:none}.product-title-link{color:inherit;text-decoration:none}.product-title-link:hover{text-decoration:underline;text-underline-offset:3px}
 .search-hero{background-image:linear-gradient(90deg,rgba(253,251,247,.99) 0%,rgba(253,251,247,.93) 48%,rgba(253,251,247,.56) 100%),url("/assets/luxury-hero.png");background-image:linear-gradient(90deg,rgba(253,251,247,.99) 0%,rgba(253,251,247,.93) 48%,rgba(253,251,247,.56) 100%),url("/assets/luxury-hero-1600.webp")}
 @media(max-width:580px){.search-hero{background-image:linear-gradient(90deg,rgba(253,251,247,.99) 0%,rgba(253,251,247,.93) 48%,rgba(253,251,247,.56) 100%),url("/assets/luxury-hero.png");background-image:linear-gradient(90deg,rgba(253,251,247,.99) 0%,rgba(253,251,247,.93) 48%,rgba(253,251,247,.56) 100%),url("/assets/luxury-hero-960.webp")}}
+
+.summer-sale-nav { color: #a66b39 !important; font-weight: 700; }
+.mobile-summer-sale-link { display:flex; align-items:center; justify-content:space-between; padding:16px 2px; color:#9b6335; text-decoration:none; border-bottom:1px solid #e9dfcf; font-weight:700; }
+.mobile-summer-sale-link small { font-size:10px; letter-spacing:.14em; }
+.summer-sale-badge { position:absolute; left:12px; top:12px; z-index:2; padding:7px 9px; border-radius:999px; background:#d4b26f; color:#2c2a29; font-size:11px; font-weight:800; letter-spacing:.04em; }
+.card-info .summer-sale-price { color:#b24e3d; }

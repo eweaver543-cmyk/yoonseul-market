@@ -100,7 +100,7 @@ const DESIGN_POSITION_LABELS = {
 const viewIcons = {
   brands: "fa-tags", categories: "fa-layer-group", products: "fa-box-open",
   members: "fa-users", reviews: "fa-star", design: "fa-images",
-  promotions: "fa-gift", inquiries: "fa-comments", payments: "fa-credit-card"
+  promotions: "fa-gift", summerSale: "fa-sun", inquiries: "fa-comments", payments: "fa-credit-card"
 };
 const money = (value) => Number(value || 0).toLocaleString("ko-KR");
 const dateText = (value) => new Intl.DateTimeFormat("ko-KR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
@@ -1386,6 +1386,63 @@ function closeAdminReviewModal() {
   if (modal) modal.hidden = true;
 }
 
+function summerSaleTemplate() {
+  return `<section class="summer-admin-shell">
+    <div class="manager-toolbar summer-admin-hero">
+      <div><p>SUMMER CLASSIC SALE</p><h2>여름세일 자동 할인</h2><span>각 브랜드 상품을 최대 3개씩 선정하고 3일마다 12–15% 할인율을 새로 적용합니다.</span></div>
+      <button class="primary-button" id="refreshSummerSale"><i class="fa-solid fa-rotate"></i> 지금 상품 교체</button>
+    </div>
+    <div class="summer-admin-controls">
+      <label><input type="checkbox" id="summerSaleActive"> 여름세일 사용</label>
+      <label><input type="checkbox" id="summerSaleTestMode"> 테스트 모드 (30초 교체)</label>
+      <strong id="summerSaleCountdown">설정을 불러오는 중입니다.</strong>
+    </div>
+    <div id="summerSaleAdminList" class="summer-admin-list"><div class="dashboard-empty">세일 상품을 불러오는 중입니다.</div></div>
+  </section>`;
+}
+
+let summerSaleAdminTimer = null;
+async function loadSummerSaleAdmin() {
+  try {
+    const data = await adminApi("/api/admin/summer-sale");
+    const active = document.querySelector("#summerSaleActive");
+    const testMode = document.querySelector("#summerSaleTestMode");
+    if (!active || !testMode) return;
+    active.checked = Boolean(data.active);
+    testMode.checked = Boolean(data.testMode);
+    const grouped = (data.items || []).reduce((result, item) => {
+      (result[item.brandName] ||= []).push(item);
+      return result;
+    }, {});
+    document.querySelector("#summerSaleAdminList").innerHTML = Object.keys(grouped).length
+      ? Object.entries(grouped).map(([brandName, items]) => `<section class="summer-admin-brand"><h3>${safeHtml(brandName)} <small>${items.length}개</small></h3><div>${items.map((item) => `<article><img src="${safeHtml(item.image || "/images/product-placeholder.svg")}" alt=""><span><b>${safeHtml(item.productName)}</b><small><del>₩${money(item.regularPrice)}</del> <strong>₩${money(item.salePrice)}</strong> · ${item.discountRate}% OFF</small></span></article>`).join("")}</div></section>`).join("")
+      : `<div class="dashboard-empty">활성화된 세일 상품이 없습니다.</div>`;
+    clearInterval(summerSaleAdminTimer);
+    const updateCountdown = () => {
+      const target = document.querySelector("#summerSaleCountdown");
+      if (!target) return clearInterval(summerSaleAdminTimer);
+      const remaining = Math.max(0, Date.parse(data.expiresAt || "") - Date.now());
+      const days = Math.floor(remaining / 86400000);
+      const hours = Math.floor((remaining % 86400000) / 3600000);
+      const minutes = Math.floor((remaining % 3600000) / 60000);
+      const seconds = Math.floor((remaining % 60000) / 1000);
+      target.textContent = data.active ? `다음 교체까지 ${days}일 ${hours}시간 ${minutes}분 ${seconds}초` : "현재 비활성화 상태입니다.";
+      if (!remaining && data.active) loadSummerSaleAdmin();
+    };
+    updateCountdown();
+    summerSaleAdminTimer = setInterval(updateCountdown, 1000);
+  } catch (error) {
+    const list = document.querySelector("#summerSaleAdminList");
+    if (list) list.innerHTML = `<div class="dashboard-empty">세일 설정을 불러오지 못했습니다.</div>`;
+  }
+}
+
+async function updateSummerSaleAdmin(payload) {
+  await adminApi("/api/admin/summer-sale", { method: "PUT", body: JSON.stringify(payload) });
+  showToast(payload.refresh ? "여름세일 상품과 할인율을 교체했습니다." : "여름세일 설정을 저장했습니다.");
+  await loadSummerSaleAdmin();
+}
+
 function saveReviewReply(reviewId, replyContent) {
   window.YoonseulCart?.updateReviewReply?.(reviewId, replyContent);
   closeAdminReviewModal();
@@ -1399,8 +1456,14 @@ function switchView(view) {
   const label = button?.dataset.label || "대시보드";
   document.querySelector("#pageTitle").textContent = label;
   document.querySelectorAll(".nav-item").forEach((item) => item.classList.toggle("active", item.dataset.view === view));
-  document.querySelector("#contentArea").innerHTML = view === "dashboard" ? dashboardTemplate() : view === "orders" ? ordersTemplate() : view === "brands" ? brandsTemplate() : view === "categories" ? categoriesTemplate() : view === "products" ? productsTemplate() : view === "members" ? membersTemplate() : view === "reviews" ? reviewsTemplate() : view === "design" ? designTemplate() : view === "promotions" ? promotionsTemplate() : view === "inquiries" ? inquiriesTemplate() : view === "payments" ? paymentsTemplate() : emptyTemplate(view, label);
+  document.querySelector("#contentArea").innerHTML = view === "dashboard" ? dashboardTemplate() : view === "orders" ? ordersTemplate() : view === "brands" ? brandsTemplate() : view === "categories" ? categoriesTemplate() : view === "products" ? productsTemplate() : view === "members" ? membersTemplate() : view === "reviews" ? reviewsTemplate() : view === "design" ? designTemplate() : view === "promotions" ? promotionsTemplate() : view === "summerSale" ? summerSaleTemplate() : view === "inquiries" ? inquiriesTemplate() : view === "payments" ? paymentsTemplate() : emptyTemplate(view, label);
   bindDynamicEvents();
+  if (view === "summerSale") {
+    loadSummerSaleAdmin();
+    document.querySelector("#summerSaleActive")?.addEventListener("change", (event) => updateSummerSaleAdmin({ active: event.currentTarget.checked }));
+    document.querySelector("#summerSaleTestMode")?.addEventListener("change", (event) => updateSummerSaleAdmin({ active: true, testMode: event.currentTarget.checked, refresh: true }));
+    document.querySelector("#refreshSummerSale")?.addEventListener("click", () => updateSummerSaleAdmin({ active: true, refresh: true }));
+  }
   closeSidebar();
 }
 

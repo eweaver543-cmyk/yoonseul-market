@@ -23,6 +23,9 @@ const IMAGE_WEBP_QUALITY = Number(process.env.IMAGE_WEBP_QUALITY || 82);
 const IMAGE_THUMB_WIDTH = Number(process.env.IMAGE_THUMB_WIDTH || 720);
 const IMAGE_THUMB_QUALITY = Number(process.env.IMAGE_THUMB_QUALITY || 74);
 const MAX_IMAGE_PIXELS = Number(process.env.MAX_IMAGE_PIXELS || 40000000);
+const SUMMER_SALE_ROTATION_MS = 3 * 24 * 60 * 60 * 1000;
+const SUMMER_SALE_TEST_ROTATION_MS = 30 * 1000;
+const SUMMER_SALE_RATES = [12, 13, 14, 15];
 if (!ADMIN_EMAIL || !ADMIN_PASSWORD || ADMIN_SESSION_SECRET.length < 32) {
   throw new Error("ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_SESSION_SECRET(32자 이상) 환경변수를 설정해 주세요.");
 }
@@ -167,7 +170,7 @@ function ensureRuntime() {
           boxFee: 0,
           destinationSurcharges: {}
         },
-        siteSettings: { designBanners: [], inquiryChannels: {}, paymentMethods: {}, promotions: [], reviews: [] }
+        siteSettings: { designBanners: [], inquiryChannels: {}, paymentMethods: {}, promotions: [], reviews: [], summerSale: {} }
       };
       fs.writeFileSync(DB_PATH, JSON.stringify(emptyDb, null, 2), "utf8");
     }
@@ -190,11 +193,25 @@ function normalizeDbShape(db) {
   db.wishlists ||= [];
   db.pricing ||= { baseFee: 0, bagFee: 0, boxFee: 0, destinationSurcharges: {} };
   db.pricing.destinationSurcharges ||= {};
-  db.siteSettings ||= { designBanners: [], inquiryChannels: {}, paymentMethods: {}, promotions: [], reviews: [] };
+  db.siteSettings ||= { designBanners: [], inquiryChannels: {}, paymentMethods: {}, promotions: [], reviews: [], summerSale: {} };
   db.siteSettings.designBanners = (Array.isArray(db.siteSettings.designBanners) ? db.siteSettings.designBanners : [])
     .map((item) => ({ ...item, active: parseBoolean(item.active, false) }));
   db.siteSettings.promotions = (Array.isArray(db.siteSettings.promotions) ? db.siteSettings.promotions : [])
     .map(normalizePromotion);
+  const summerSale = db.siteSettings.summerSale && typeof db.siteSettings.summerSale === "object"
+    ? db.siteSettings.summerSale
+    : {};
+  db.siteSettings.summerSale = {
+    active: parseBoolean(summerSale.active, true),
+    testMode: parseBoolean(summerSale.testMode, false),
+    generatedAt: String(summerSale.generatedAt || ""),
+    expiresAt: String(summerSale.expiresAt || ""),
+    items: Array.isArray(summerSale.items) ? summerSale.items.map((item) => ({
+      productId: Number(item.productId || 0),
+      brandId: Number(item.brandId || 0),
+      discountRate: Math.min(15, Math.max(12, Number(item.discountRate || 12)))
+    })).filter((item) => item.productId && item.brandId) : []
+  };
   return db;
 }
 
@@ -540,6 +557,7 @@ function renderProductDetailHtml(db, product) {
 function sitemapXml(db) {
   const staticPages = [
     { path: "/", priority: "1.0", frequency: "daily" },
+    { path: "/summer-sale", priority: "0.8", frequency: "daily" },
     { path: "/about", priority: "0.6", frequency: "monthly" },
     { path: "/legal", priority: "0.3", frequency: "yearly" }
   ];
@@ -995,15 +1013,100 @@ function calculateBestSellerRankings(requests, products, now = Date.now()) {
     .slice(0, 8)]));
 }
 
-function storefrontProduct(product) {
+function summerSaleDuration(sale) {
+  return sale?.testMode ? SUMMER_SALE_TEST_ROTATION_MS : SUMMER_SALE_ROTATION_MS;
+}
+
+function shuffleItems(items) {
+  const result = [...items];
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const target = crypto.randomInt(index + 1);
+    [result[index], result[target]] = [result[target], result[index]];
+  }
+  return result;
+}
+
+function regenerateSummerSale(db, now = Date.now()) {
+  const sale = db.siteSettings.summerSale;
+  const activeProducts = db.products.filter((product) => !["삭제", "판매중지", "품절"].includes(String(product.status || "")));
+  const items = [];
+  for (const brand of [...db.brands].sort((a, b) => Number(a.order || 0) - Number(b.order || 0))) {
+    const candidates = activeProducts.filter((product) => Number(product.brandId) === Number(brand.id));
+    for (const product of shuffleItems(candidates).slice(0, 3)) {
+      items.push({
+        productId: Number(product.id),
+        brandId: Number(brand.id),
+        discountRate: SUMMER_SALE_RATES[crypto.randomInt(SUMMER_SALE_RATES.length)]
+      });
+    }
+  }
+  sale.items = items;
+  sale.generatedAt = new Date(now).toISOString();
+  sale.expiresAt = new Date(now + summerSaleDuration(sale)).toISOString();
+  return sale;
+}
+
+function ensureSummerSale(db, { force = false } = {}) {
+  const sale = db.siteSettings.summerSale;
+  if (!sale.active) return false;
+  const now = Date.now();
+  const expiresAt = Date.parse(sale.expiresAt || "");
+  const productIds = new Set(db.products.filter((product) => product.status !== "삭제").map((product) => Number(product.id)));
+  const invalidItems = sale.items.some((item) => !productIds.has(Number(item.productId)));
+  if (!force && sale.items.length && Number.isFinite(expiresAt) && expiresAt > now && !invalidItems) return false;
+  regenerateSummerSale(db, now);
+  return true;
+}
+
+function summerSaleItem(db, product) {
+  const sale = db.siteSettings.summerSale;
+  if (!sale.active || Date.parse(sale.expiresAt || "") <= Date.now()) return null;
+  return sale.items.find((item) => Number(item.productId) === Number(product.id)) || null;
+}
+
+function productWithSummerPrice(db, product) {
+  const item = summerSaleItem(db, product);
+  if (!item) return { ...product };
+  const regularPrice = Math.max(0, Number(product.price || 0));
+  const salePrice = Math.max(0, Math.round(regularPrice * (100 - item.discountRate) / 100));
+  return {
+    ...product,
+    regularPrice,
+    price: salePrice,
+    oldPrice: regularPrice,
+    summerSale: {
+      active: true,
+      discountRate: item.discountRate,
+      salePrice,
+      regularPrice,
+      expiresAt: db.siteSettings.summerSale.expiresAt
+    }
+  };
+}
+
+function publicSummerSale(db) {
+  const sale = db.siteSettings.summerSale;
+  return {
+    active: Boolean(sale.active),
+    testMode: Boolean(sale.testMode),
+    generatedAt: sale.generatedAt || "",
+    expiresAt: sale.expiresAt || "",
+    itemCount: sale.active ? sale.items.length : 0
+  };
+}
+
+function storefrontProduct(product, db) {
+  const pricedProduct = productWithSummerPrice(db, product);
   const primaryImage = productPrimarySource(product);
   return {
     id: Number(product.id || 0),
     brandId: Number(product.brandId || 0),
     categoryId: Number(product.categoryId || 0),
     name: String(product.name || ""),
-    price: Number(product.price || 0),
-    oldPrice: Number(product.oldPrice || product.price || 0),
+    price: Number(pricedProduct.price || 0),
+    oldPrice: Number(pricedProduct.oldPrice || pricedProduct.price || 0),
+    regularPrice: Number(pricedProduct.regularPrice || product.price || 0),
+    summerSale: pricedProduct.summerSale || null,
     image: primaryImage,
     status: String(product.status || "판매중"),
     createdAt: product.createdAt || ""
@@ -1024,11 +1127,12 @@ function storefrontPayload(db) {
     generatedAt: new Date().toISOString(),
     brands: [...db.brands].sort((a, b) => Number(a.order || 0) - Number(b.order || 0)),
     categories: db.categories,
-    products: db.products.filter((product) => product.status !== "삭제").map(storefrontProduct),
+    products: db.products.filter((product) => product.status !== "삭제").map((product) => storefrontProduct(product, db)),
     periods: { realtime: "최근 24시간", weekly: "최근 7일", monthly: "최근 30일" },
     rankings: calculateBestSellerRankings(db.requests, db.products),
     promotions: promotionData.promotions,
     today: promotionData.today,
+    summerSale: publicSummerSale(db),
     siteSettings: {
       designBanners: db.siteSettings.designBanners || [],
       inquiryChannels: db.siteSettings.inquiryChannels || {}
@@ -1038,6 +1142,7 @@ function storefrontPayload(db) {
 
 async function handleApi(req, res, url) {
   const db = readDb();
+  if (ensureSummerSale(db)) writeDb(db);
 
   if (url.pathname === "/api/health" && req.method === "GET") {
     return send(res, 200, {
@@ -1061,7 +1166,7 @@ async function handleApi(req, res, url) {
     const brand = db.brands.find((item) => Number(item.id) === Number(product.brandId)) || null;
     const categoryGroup = db.categories.find((entry) => Number(entry.brandId) === Number(product.brandId));
     const category = categoryGroup?.items?.find((item) => Number(item.id) === Number(product.categoryId)) || null;
-    return send(res, 200, { product, brand, category }, "application/json; charset=utf-8", {
+    return send(res, 200, { product: productWithSummerPrice(db, product), brand, category }, "application/json; charset=utf-8", {
       "Cache-Control": "public, max-age=30, stale-while-revalidate=120"
     });
   }
@@ -1070,7 +1175,8 @@ async function handleApi(req, res, url) {
     return send(res, 200, {
       brands: [...db.brands].sort((a, b) => Number(a.order || 0) - Number(b.order || 0)),
       categories: db.categories,
-      products: db.products.filter((product) => product.status !== "삭제")
+      products: db.products.filter((product) => product.status !== "삭제").map((product) => productWithSummerPrice(db, product)),
+      summerSale: publicSummerSale(db)
     });
   }
 
@@ -1268,6 +1374,13 @@ async function handleApi(req, res, url) {
     if (isProductOrder && body.customsMatchConfirmed !== true) {
       return sendError(res, 400, "통관 정보 일치 확인이 필요합니다.");
     }
+    const orderedProduct = isProductOrder
+      ? db.products.find((product) => Number(product.id) === Number(body.productId) && !["삭제", "판매중지"].includes(String(product.status || "")))
+      : null;
+    if (isProductOrder && !orderedProduct) return sendError(res, 404, "주문 상품을 찾을 수 없습니다.");
+    const pricedOrderProduct = orderedProduct ? productWithSummerPrice(db, orderedProduct) : null;
+    const orderQuantity = Math.max(1, Number(body.quantity || body.boxCount || 1));
+    const verifiedOrderTotal = pricedOrderProduct ? Number(pricedOrderProduct.price || 0) * orderQuantity : 0;
     const request = {
       id: nextRequestId(db.requests),
       userId: body.userId || "GUEST",
@@ -1283,18 +1396,26 @@ async function handleApi(req, res, url) {
       boxCount: Number(body.boxCount || 0),
       itemType: String(body.itemType || "").trim(),
       productId: Number(body.productId || 0),
-      productName: String(body.productName || "").trim(),
-      brandName: String(body.brandName || "").trim(),
+      productName: pricedOrderProduct ? String(pricedOrderProduct.name || "").trim() : String(body.productName || "").trim(),
+      brandName: pricedOrderProduct
+        ? String(db.brands.find((brand) => Number(brand.id) === Number(pricedOrderProduct.brandId))?.koName || "")
+        : String(body.brandName || "").trim(),
       option: String(body.option || "").trim(),
-      quantity: Math.max(1, Number(body.quantity || body.boxCount || 1)),
+      quantity: orderQuantity,
       image: String(body.image || "").trim(),
       email: String(body.email || "").trim(),
       postcode: String(body.postcode || "").trim(),
       paymentMethod: String(body.paymentMethod || "무통장입금").trim(),
       customsCode: maskCustomsCode(customs),
       customsCodeEncrypted: encryptCustomsCode(customs),
-      estimatedPrice: Number(body.estimatedPrice || body.orderTotal || 0) || calculatePrice(body, db.pricing),
-      confirmedPrice: Number(body.confirmedPrice || body.orderTotal || 0) || null,
+      estimatedPrice: isProductOrder ? verifiedOrderTotal : (Number(body.estimatedPrice || body.orderTotal || 0) || calculatePrice(body, db.pricing)),
+      confirmedPrice: isProductOrder ? verifiedOrderTotal : (Number(body.confirmedPrice || body.orderTotal || 0) || null),
+      summerSale: pricedOrderProduct?.summerSale ? {
+        discountRate: pricedOrderProduct.summerSale.discountRate,
+        regularPrice: pricedOrderProduct.summerSale.regularPrice,
+        salePrice: pricedOrderProduct.summerSale.salePrice,
+        expiresAt: pricedOrderProduct.summerSale.expiresAt
+      } : null,
       status: "입금대기",
       adminMemo: ""
     };
@@ -1460,6 +1581,44 @@ async function handleApi(req, res, url) {
         byStatus
       }
     });
+  }
+
+  if (url.pathname === "/api/admin/summer-sale" && req.method === "GET") {
+    const sale = db.siteSettings.summerSale;
+    return send(res, 200, {
+      ...publicSummerSale(db),
+      items: sale.items.map((item) => {
+        const product = db.products.find((entry) => Number(entry.id) === Number(item.productId));
+        const brand = db.brands.find((entry) => Number(entry.id) === Number(item.brandId));
+        const priced = product ? productWithSummerPrice(db, product) : null;
+        return {
+          ...item,
+          productName: product?.name || "삭제된 상품",
+          brandName: brand?.koName || "브랜드 없음",
+          image: product ? productPrimarySource(product) : "",
+          regularPrice: Number(product?.price || 0),
+          salePrice: Number(priced?.price || 0)
+        };
+      })
+    });
+  }
+
+  if (url.pathname === "/api/admin/summer-sale" && req.method === "PUT") {
+    const body = await readBody(req);
+    const sale = db.siteSettings.summerSale;
+    const previousTestMode = sale.testMode;
+    if (Object.prototype.hasOwnProperty.call(body, "active")) sale.active = parseBoolean(body.active, true);
+    if (Object.prototype.hasOwnProperty.call(body, "testMode")) sale.testMode = parseBoolean(body.testMode, false);
+    if (!sale.active) {
+      sale.items = [];
+      sale.generatedAt = "";
+      sale.expiresAt = "";
+    } else {
+      ensureSummerSale(db, { force: parseBoolean(body.refresh, false) || previousTestMode !== sale.testMode || !sale.items.length });
+    }
+    db.siteSettings.updatedAt = new Date().toISOString();
+    writeDb(db);
+    return send(res, 200, publicSummerSale(db));
   }
 
 
@@ -1747,6 +1906,7 @@ function resolveRoute(pathname) {
     "/mypage": "/mypage.html",
     "/about": "/about.html",
     "/legal": "/legal.html"
+    ,"/summer-sale": "/summer-sale.html"
   };
   return routes[pathname] || pathname;
 }
@@ -1785,11 +1945,12 @@ Sitemap: ${absoluteSiteUrl("/sitemap.xml")}
   const requestedProductId = Number(productRoute?.[1] || legacyProductId || 0);
   if (productRoute || isLegacyProductRoute) {
     const db = readDb();
+    if (ensureSummerSale(db)) writeDb(db);
     const product = db.products.find((item) => Number(item.id) === requestedProductId && !["삭제", "판매중지"].includes(String(item.status || "")));
     if (!product) {
       return send(res, 404, "상품을 찾을 수 없습니다.", "text/plain; charset=utf-8", { "X-Robots-Tag": "noindex" });
     }
-    return send(res, 200, renderProductDetailHtml(db, product), "text/html; charset=utf-8");
+    return send(res, 200, renderProductDetailHtml(db, productWithSummerPrice(db, product)), "text/html; charset=utf-8");
   }
 
   if (url.pathname.startsWith("/uploads/")) {
@@ -1833,6 +1994,7 @@ Sitemap: ${absoluteSiteUrl("/sitemap.xml")}
     let responseData = data;
     if (safeTarget === "/index.html") {
       const db = readDb();
+      if (ensureSummerSale(db)) writeDb(db);
       const bootstrap = JSON.stringify(storefrontPayload(db)).replace(/</g, "\\u003c");
       const mobileBrands = [...db.brands]
         .sort((a, b) => Number(a.order || 0) - Number(b.order || 0))
@@ -1842,7 +2004,7 @@ Sitemap: ${absoluteSiteUrl("/sitemap.xml")}
         .replace("</head>", `<script>window.YOONSEUL_STOREFRONT_BOOTSTRAP=${bootstrap};</script></head>`)
         .replace(
           '<nav class="mobile-brand-list" id="mobileBrandDrawerList" aria-label="모바일 브랜드 목록"></nav>',
-          `<nav class="mobile-brand-list" id="mobileBrandDrawerList" aria-label="모바일 브랜드 목록">${mobileBrands}</nav>`
+          `<nav class="mobile-brand-list" id="mobileBrandDrawerList" aria-label="모바일 브랜드 목록"><a class="mobile-summer-sale-link" href="/summer-sale"><span>여름세일</span><small>SUMMER SALE</small></a>${mobileBrands}</nav>`
         );
     }
     send(
