@@ -421,7 +421,8 @@ function renderBrandControls() {
   }
   const mobileBrandDrawerList = document.querySelector("#mobileBrandDrawerList");
   if (mobileBrandDrawerList) {
-    mobileBrandDrawerList.innerHTML = `<a class="mobile-summer-sale-link" href="/summer-sale"><span>여름세일</span><small>SUMMER SALE</small></a>` + sorted.map((brand) => `
+    const seasonalSaleName = document.querySelector(".summer-sale-nav")?.textContent || "여름세일";
+    mobileBrandDrawerList.innerHTML = `<a class="mobile-summer-sale-link" href="/summer-sale"><span>${escapeHtml(seasonalSaleName)}</span><small>SEASON SALE</small></a>` + sorted.map((brand) => `
       <button type="button" class="${Number(activeBrandId) === Number(brand.id) ? "active" : ""}" data-brand-id="${brand.id}">
         <span>${escapeHtml(brand.koName)}</span>
       </button>
@@ -611,7 +612,7 @@ function renderDesignBanners() {
 
 function applyStorefrontData(data, silent = false) {
   if (!Array.isArray(data.products) || !Array.isArray(data.brands)) throw new Error("CATALOG_INVALID");
-  const signature = JSON.stringify([data.brands, data.products, data.categories, data.rankings, data.promotions, data.siteSettings]);
+  const signature = JSON.stringify([data.brands, data.products, data.categories, data.rankings, data.promotions, data.summerSale, data.siteSettings]);
   if (silent && signature === catalogSignature) return;
   catalogSignature = signature;
   brands = data.brands;
@@ -620,6 +621,8 @@ function applyStorefrontData(data, silent = false) {
   if (data.rankings) salesRankings = data.rankings;
   if (data.periods) rankingPeriods = data.periods;
   if (Array.isArray(data.promotions)) promotions = data.promotions;
+  const seasonalSaleName = String(data.summerSale?.name || "여름세일");
+  document.querySelectorAll(".summer-sale-nav").forEach((node) => { node.textContent = seasonalSaleName; });
   const settings = data.siteSettings || {};
   if (Array.isArray(settings.designBanners)) localStorage.setItem(DESIGN_STORAGE_KEY, JSON.stringify(normalizeDesignBanners(settings.designBanners)));
   if (settings.inquiryChannels && Object.keys(settings.inquiryChannels).length) localStorage.setItem(INQUIRY_CHANNEL_STORAGE_KEY, JSON.stringify(settings.inquiryChannels));

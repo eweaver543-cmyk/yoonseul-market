@@ -5,20 +5,47 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="3일마다 새롭게 선정되는 윤슬마켓 여름 세일 상품">
   <link rel="canonical" href="https://yoonseulmarket.com/summer-sale">
-  <title>여름세일 | 윤슬마켓</title>
+  <title>시즌세일 | 윤슬마켓</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700&family=Noto+Serif+KR:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css?v=summer-header-20260716">
   <link rel="stylesheet" href="/summer-sale.css">
+  <style>.summer-page-header .summer-sale-nav{color:#a66b39!important;font-weight:700}.summer-mobile-brand{display:block;padding:12px 0 12px 14px;color:#2c2a29;text-decoration:none;font-size:15px;font-weight:500;line-height:1.3;transition:color .18s ease,transform .18s ease}.summer-mobile-brand:hover{color:#a9823f;transform:translateX(2px)}</style>
 </head>
 <body>
-  <header class="sale-header"><a href="/">윤슬마켓<small>YOONSEUL MARKET</small></a><nav><a href="/">홈</a><a href="/#all">전체상품</a><a href="/cart">장바구니</a></nav></header>
+  <header class="lux-header summer-page-header">
+    <button class="mobile-menu" id="mobileMenu" type="button" aria-label="브랜드 메뉴 열기">☰</button>
+    <a class="lux-logo" href="/">윤슬마켓<small>YOONSEUL MARKET</small></a>
+    <nav class="main-nav" id="mainNav">
+      <a href="/#best">베스트</a><a href="/#all">전체상품</a><a class="summer-sale-nav active" href="/summer-sale" aria-current="page">시즌세일</a>
+      <span class="featured-brand-nav" id="featuredBrandNav"></span>
+      <div class="more-menu"><button id="moreButton" type="button">더보기⌄</button><div class="more-brand-panel" id="moreBrandPanel" aria-label="전체 브랜드"></div></div>
+    </nav>
+    <div class="nav-actions">
+      <a class="login-button" id="memberJoinButton" href="/join">로그인</a>
+      <a class="header-search-button" href="/#searchHero" aria-label="검색"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg></a>
+      <button class="cart-button" id="cartButton" type="button" aria-label="장바구니"><svg viewBox="0 0 24 24"><path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 7H6M10 20h.01M17 20h.01"></path></svg><em id="cartCount">0</em></button>
+    </div>
+  </header>
+  <div class="mobile-drawer-overlay" id="mobileDrawerOverlay"></div>
+  <aside class="mobile-category-drawer" id="mobileCategoryDrawer" aria-hidden="true">
+    <div class="mobile-drawer-head"><div><strong>브랜드</strong><small>BRANDS</small></div><button id="mobileDrawerClose" type="button" aria-label="메뉴 닫기">×</button></div>
+    <nav class="mobile-brand-list" id="mobileBrandDrawerList" aria-label="모바일 브랜드 목록"><a class="mobile-summer-sale-link" href="/summer-sale"><span>시즌세일</span><small>SEASON SALE</small></a></nav>
+    <div class="mobile-drawer-account" id="mobileDrawerAccount"><a href="/join">로그인</a></div>
+  </aside>
   <main>
     <section class="sale-hero">
-      <p>SUMMER CLASSIC SALE</p>
-      <h1>여름의 품격을 위한<br>단 3일의 셀렉션</h1>
+      <p id="seasonalSaleEnglishTitle">SEASON CLASSIC SALE</p>
+      <h1><span id="seasonalSaleHeroName">시즌세일</span><br>단 3일의 프리미엄 셀렉션</h1>
       <span>각 브랜드에서 엄선한 상품을 12–15% 특별한 가격으로 만나보세요.</span>
       <div class="sale-countdown" id="saleCountdown">세일 상품 교체 시간을 확인하는 중입니다.</div>
     </section>
     <section class="sale-content" id="saleContent"><div class="sale-loading">여름 세일 상품을 준비하고 있습니다.</div></section>
   </main>
+  <script src="/cart-utils.js"></script>
+  <script src="/summer-sale-header.js" defer></script>
   <script src="/summer-sale.js" defer></script>
+  <script src="/shop-member-cart.js?v=summer-header-20260716" defer></script>
 </body>
 </html>

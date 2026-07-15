@@ -1393,7 +1393,9 @@ function summerSaleTemplate() {
       <button class="primary-button" id="refreshSummerSale"><i class="fa-solid fa-rotate"></i> 지금 상품 교체</button>
     </div>
     <div class="summer-admin-controls">
-      <label><input type="checkbox" id="summerSaleActive"> 여름세일 사용</label>
+      <label>프로모션 이름 <input type="text" id="summerSaleName" maxlength="20" placeholder="예: 여름세일"></label>
+      <button class="secondary-button" id="saveSummerSaleName" type="button">이름 저장</button>
+      <label><input type="checkbox" id="summerSaleActive"> 시즌세일 사용</label>
       <label><input type="checkbox" id="summerSaleTestMode"> 테스트 모드 (30초 교체)</label>
       <strong id="summerSaleCountdown">설정을 불러오는 중입니다.</strong>
     </div>
@@ -1407,9 +1409,14 @@ async function loadSummerSaleAdmin() {
     const data = await adminApi("/api/admin/summer-sale");
     const active = document.querySelector("#summerSaleActive");
     const testMode = document.querySelector("#summerSaleTestMode");
+    const name = document.querySelector("#summerSaleName");
     if (!active || !testMode) return;
     active.checked = Boolean(data.active);
     testMode.checked = Boolean(data.testMode);
+    if (name) name.value = data.name || "여름세일";
+    const navLabel = document.querySelector('[data-view="summerSale"] span');
+    if (navLabel) navLabel.textContent = data.name || "여름세일";
+    if (currentView === "summerSale") document.querySelector("#pageTitle").textContent = data.name || "여름세일";
     const grouped = (data.items || []).reduce((result, item) => {
       (result[item.brandName] ||= []).push(item);
       return result;
@@ -1439,7 +1446,7 @@ async function loadSummerSaleAdmin() {
 
 async function updateSummerSaleAdmin(payload) {
   await adminApi("/api/admin/summer-sale", { method: "PUT", body: JSON.stringify(payload) });
-  showToast(payload.refresh ? "여름세일 상품과 할인율을 교체했습니다." : "여름세일 설정을 저장했습니다.");
+  showToast(payload.refresh ? "시즌세일 상품과 할인율을 교체했습니다." : "시즌세일 설정을 저장했습니다.");
   await loadSummerSaleAdmin();
 }
 
@@ -1462,6 +1469,7 @@ function switchView(view) {
     loadSummerSaleAdmin();
     document.querySelector("#summerSaleActive")?.addEventListener("change", (event) => updateSummerSaleAdmin({ active: event.currentTarget.checked }));
     document.querySelector("#summerSaleTestMode")?.addEventListener("change", (event) => updateSummerSaleAdmin({ active: true, testMode: event.currentTarget.checked, refresh: true }));
+    document.querySelector("#saveSummerSaleName")?.addEventListener("click", () => updateSummerSaleAdmin({ name: document.querySelector("#summerSaleName")?.value || "여름세일" }));
     document.querySelector("#refreshSummerSale")?.addEventListener("click", () => updateSummerSaleAdmin({ active: true, refresh: true }));
   }
   closeSidebar();

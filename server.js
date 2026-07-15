@@ -204,6 +204,7 @@ function normalizeDbShape(db) {
   db.siteSettings.summerSale = {
     active: parseBoolean(summerSale.active, true),
     testMode: parseBoolean(summerSale.testMode, false),
+    name: String(summerSale.name || "여름세일").trim().slice(0, 20) || "여름세일",
     generatedAt: String(summerSale.generatedAt || ""),
     expiresAt: String(summerSale.expiresAt || ""),
     items: Array.isArray(summerSale.items) ? summerSale.items.map((item) => ({
@@ -1089,6 +1090,7 @@ function publicSummerSale(db) {
   return {
     active: Boolean(sale.active),
     testMode: Boolean(sale.testMode),
+    name: sale.name || "여름세일",
     generatedAt: sale.generatedAt || "",
     expiresAt: sale.expiresAt || "",
     itemCount: sale.active ? sale.items.length : 0
@@ -1609,6 +1611,7 @@ async function handleApi(req, res, url) {
     const previousTestMode = sale.testMode;
     if (Object.prototype.hasOwnProperty.call(body, "active")) sale.active = parseBoolean(body.active, true);
     if (Object.prototype.hasOwnProperty.call(body, "testMode")) sale.testMode = parseBoolean(body.testMode, false);
+    if (Object.prototype.hasOwnProperty.call(body, "name")) sale.name = String(body.name || "").trim().slice(0, 20) || "여름세일";
     if (!sale.active) {
       sale.items = [];
       sale.generatedAt = "";
