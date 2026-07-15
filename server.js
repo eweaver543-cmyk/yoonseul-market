@@ -1054,7 +1054,18 @@ function ensureSummerSale(db, { force = false } = {}) {
   const expiresAt = Date.parse(sale.expiresAt || "");
   const productIds = new Set(db.products.filter((product) => product.status !== "삭제").map((product) => Number(product.id)));
   const invalidItems = sale.items.some((item) => !productIds.has(Number(item.productId)));
-  if (!force && sale.items.length && Number.isFinite(expiresAt) && expiresAt > now && !invalidItems) return false;
+  const activeProducts = db.products.filter((product) => !["삭제", "판매중지", "품절"].includes(String(product.status || "")));
+  const selectedByBrand = sale.items.reduce((counts, item) => {
+    const brandId = Number(item.brandId);
+    counts.set(brandId, (counts.get(brandId) || 0) + 1);
+    return counts;
+  }, new Map());
+  const incompleteBrand = db.brands.some((brand) => {
+    const available = activeProducts.filter((product) => Number(product.brandId) === Number(brand.id)).length;
+    const expected = Math.min(4, available);
+    return expected > 0 && (selectedByBrand.get(Number(brand.id)) || 0) < expected;
+  });
+  if (!force && sale.items.length && Number.isFinite(expiresAt) && expiresAt > now && !invalidItems && !incompleteBrand) return false;
   regenerateSummerSale(db, now);
   return true;
 }
