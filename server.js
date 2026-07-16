@@ -26,6 +26,7 @@ const MAX_IMAGE_PIXELS = Number(process.env.MAX_IMAGE_PIXELS || 40000000);
 const SUMMER_SALE_ROTATION_MS = 3 * 24 * 60 * 60 * 1000;
 const SUMMER_SALE_TEST_ROTATION_MS = 30 * 1000;
 const SUMMER_SALE_RATES = [12, 13, 14, 15];
+const PRODUCT_DETAIL_INTRO_IMAGE = "/assets/yoonseul-product-detail-intro.jpg";
 if (!ADMIN_EMAIL || !ADMIN_PASSWORD || ADMIN_SESSION_SECRET.length < 32) {
   throw new Error("ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_SESSION_SECRET(32자 이상) 환경변수를 설정해 주세요.");
 }
@@ -833,15 +834,31 @@ function normalizeProductImages(images, fallbackImage = "", productName = "produ
     .slice(0, 10);
   const normalizedDetail = inputDetail
     .map((item, index) => persistImageSource(item, `${slugify(productName)}-detail-${index + 1}`))
-    .filter(Boolean)
+    .filter((source) => source && source !== PRODUCT_DETAIL_INTRO_IMAGE)
     .slice(0, 20);
 
   const primaryImage = normalizedMain[0] || persistImageSource(fallbackImage, `${slugify(productName)}-cover`) || "";
-  if (!primaryImage) return { image: "", images: { main: [], detail: normalizedDetail } };
+  const detailWithIntro = [PRODUCT_DETAIL_INTRO_IMAGE, ...normalizedDetail];
+  if (!primaryImage) return { image: "", images: { main: [], detail: detailWithIntro } };
   if (!normalizedMain.length) normalizedMain.push(primaryImage);
   const mainImageSet = new Set(normalizedMain);
-  const safeDetail = normalizedDetail.filter((source) => !mainImageSet.has(source));
+  const safeDetail = detailWithIntro.filter((source) => !mainImageSet.has(source));
   return { image: primaryImage, images: { main: normalizedMain, detail: safeDetail } };
+}
+
+function productWithDetailIntro(product) {
+  const detailImages = Array.isArray(product?.images?.detail) ? product.images.detail : [];
+  return {
+    ...product,
+    images: {
+      ...(product.images || {}),
+      main: Array.isArray(product?.images?.main) ? product.images.main : [],
+      detail: [
+        PRODUCT_DETAIL_INTRO_IMAGE,
+        ...detailImages.filter((source) => source && source !== PRODUCT_DETAIL_INTRO_IMAGE)
+      ]
+    }
+  };
 }
 
 function normalizeOptions(options) {
@@ -1081,12 +1098,13 @@ function summerSaleItem(db, product) {
 }
 
 function productWithSummerPrice(db, product) {
+  const productWithIntro = productWithDetailIntro(product);
   const item = summerSaleItem(db, product);
-  if (!item) return { ...product };
+  if (!item) return productWithIntro;
   const regularPrice = Math.max(0, Number(product.price || 0));
   const salePrice = Math.max(0, Math.round(regularPrice * (100 - item.discountRate) / 100));
   return {
-    ...product,
+    ...productWithIntro,
     regularPrice,
     price: salePrice,
     oldPrice: regularPrice,
@@ -1607,7 +1625,7 @@ async function handleApi(req, res, url) {
       inquiries: db.inquiries,
       brands: db.brands,
       categories: db.categories,
-      products: db.products,
+      products: db.products.map(productWithDetailIntro),
       siteSettings: db.siteSettings || {},
       stats: {
         total: db.requests.length,
