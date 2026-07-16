@@ -521,6 +521,10 @@ function renderProductDetailHtml(db, product) {
   const representativeImage = imageUrls[0] || absoluteSiteUrl("/images/product-placeholder.svg");
   const structuredData = productStructuredData(db, product, brand, description, canonicalUrl, imageUrls);
   const bootstrapData = JSON.stringify({ product, brand: brand || null, category }).replace(/</g, "\\u003c");
+  const headerBootstrapData = JSON.stringify({
+    brands: [...db.brands].sort((a, b) => Number(a.order || 0) - Number(b.order || 0)),
+    saleName: String(db.siteSettings?.summerSale?.name || "여름세일")
+  }).replace(/</g, "\\u003c");
   const primarySource = productPrimarySource(product);
   const primaryPreview = String(primarySource || "").startsWith("/uploads/")
     ? `/thumbnail?src=${encodeURIComponent(primarySource)}`
@@ -548,7 +552,7 @@ function renderProductDetailHtml(db, product) {
   <meta name="twitter:image" content="${escapeHtmlAttribute(representativeImage)}">
   ${primaryPreview ? `<link rel="preload" as="image" href="${escapeHtmlAttribute(primaryPreview)}" fetchpriority="high">` : ""}
   ${firstDetailPreview ? `<link rel="preload" as="image" href="${escapeHtmlAttribute(firstDetailPreview)}">` : ""}
-  <script>window.YOONSEUL_PRODUCT_ID=${Number(product.id)};window.YOONSEUL_PRODUCT_BOOTSTRAP=${bootstrapData};</script>
+  <script>window.YOONSEUL_PRODUCT_ID=${Number(product.id)};window.YOONSEUL_PRODUCT_BOOTSTRAP=${bootstrapData};window.YOONSEUL_HEADER_BOOTSTRAP=${headerBootstrapData};</script>
   <script type="application/ld+json">${structuredData}</script>`;
   return template
     .replace(/<title>[^<]*<\/title>/i, `<title>${escapeHtmlAttribute(title)}</title>`)

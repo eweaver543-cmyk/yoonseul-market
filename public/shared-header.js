@@ -9,6 +9,7 @@ function sharedEscapeHtml(value) {
 }
 
 const SHARED_INQUIRY_CHANNEL_STORAGE_KEY = "yoonseulInquiryChannels";
+const SHARED_HEADER_CACHE_KEY = "yoonseul-shared-header-cache-v1";
 const SHARED_DEFAULT_INQUIRY_CHANNELS = {
   kakao: "https://pf.kakao.com/",
   line: "https://line.me/",
@@ -160,7 +161,7 @@ function goSharedBrand(brandId) {
   window.location.href = `/?brand=${encodeURIComponent(id)}#all`;
 }
 
-function renderSharedBrandMenus(brands, products) {
+function renderSharedBrandMenus(brands, products = [], seasonalSaleName = "여름세일") {
   const moreBrandPanel = document.querySelector("#moreBrandPanel");
   const featuredNav = document.querySelector("#featuredBrandNav");
   const mobileBrandDrawerList = document.querySelector("#mobileBrandDrawerList");
@@ -171,11 +172,15 @@ function renderSharedBrandMenus(brands, products) {
   const moreBrands = sorted.slice(8);
   const moreMenu = document.querySelector(".more-menu");
 
+  document.querySelectorAll(".summer-sale-nav").forEach((node) => {
+    node.textContent = seasonalSaleName;
+  });
+
   featuredNav.innerHTML = headerBrands.map((brand) => `<button type="button" data-brand-id="${brand.id}">${sharedEscapeHtml(brand.koName)}</button>`).join("");
   if (moreMenu) moreMenu.hidden = moreBrands.length === 0;
   moreBrandPanel.innerHTML = moreBrands.map((brand) => `<button type="button" data-brand-id="${brand.id}">${sharedEscapeHtml(brand.koName)}</button>`).join("");
   if (mobileBrandDrawerList) {
-    mobileBrandDrawerList.innerHTML = sorted.map((brand) => `
+    mobileBrandDrawerList.innerHTML = `<a class="mobile-summer-sale-link" href="/summer-sale"><span>${sharedEscapeHtml(seasonalSaleName)}</span><small>SEASON SALE</small></a>` + sorted.map((brand) => `
       <button type="button" data-brand-id="${brand.id}">
         <span>${sharedEscapeHtml(brand.koName)}</span>
       </button>
@@ -192,11 +197,6 @@ function renderSharedBrandMenus(brands, products) {
 }
 
 async function initSharedHeader() {
-  try {
-    const settingsResponse = await fetch("/api/site-settings", { cache: "no-store" });
-    const settings = await settingsResponse.json();
-    if (settings.inquiryChannels && Object.keys(settings.inquiryChannels).length) localStorage.setItem(SHARED_INQUIRY_CHANNEL_STORAGE_KEY, JSON.stringify(settings.inquiryChannels));
-  } catch (_) {}
   const mobileButton = document.querySelector("#mobileMenu");
   const moreButton = document.querySelector("#moreButton");
   const loginButton = document.querySelector("#memberJoinButton");
@@ -237,12 +237,37 @@ async function initSharedHeader() {
   renderSharedInquiryChannels();
   updateSharedHeaderScrollShadow();
 
+  let immediateHeader = window.YOONSEUL_HEADER_BOOTSTRAP || null;
+  if (!immediateHeader) {
+    try {
+      immediateHeader = JSON.parse(localStorage.getItem(SHARED_HEADER_CACHE_KEY) || "null");
+    } catch (_) {}
+  }
+  if (Array.isArray(immediateHeader?.brands)) {
+    renderSharedBrandMenus(immediateHeader.brands, [], immediateHeader.saleName || "여름세일");
+  }
+
+  fetch("/api/site-settings", { cache: "no-store" })
+    .then((response) => response.json())
+    .then((settings) => {
+      if (settings.inquiryChannels && Object.keys(settings.inquiryChannels).length) {
+        localStorage.setItem(SHARED_INQUIRY_CHANNEL_STORAGE_KEY, JSON.stringify(settings.inquiryChannels));
+        renderSharedInquiryChannels();
+      }
+    })
+    .catch(() => {});
+
   try {
     const response = await fetch("/api/catalog");
     const catalog = await response.json();
-    renderSharedBrandMenus(catalog.brands || [], catalog.products || []);
+    const headerData = {
+      brands: catalog.brands || [],
+      saleName: catalog.summerSale?.name || immediateHeader?.saleName || "여름세일"
+    };
+    localStorage.setItem(SHARED_HEADER_CACHE_KEY, JSON.stringify(headerData));
+    renderSharedBrandMenus(headerData.brands, catalog.products || [], headerData.saleName);
   } catch (_) {
-    renderSharedBrandMenus([], []);
+    if (!immediateHeader) renderSharedBrandMenus([], [], "여름세일");
   }
 
   if ("BroadcastChannel" in window) {
