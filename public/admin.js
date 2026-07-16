@@ -294,6 +294,10 @@ function brandsTemplate() {
 
 function productsTemplate() {
   const brandOptions = [...dashboardData.brands].sort((a, b) => Number(a.order) - Number(b.order)).map((brand) => `<option value="${brand.id}">${brand.koName} / ${brand.enName}</option>`).join("");
+  const filterCategoryOptions = dashboardData.categories.flatMap((group) => {
+    const brand = dashboardData.brands.find((item) => Number(item.id) === Number(group.brandId));
+    return (group.items || []).map((category) => `<option value="${category.id}">${safeHtml(brand?.koName || "미지정")} · ${safeHtml(category.name)}</option>`);
+  }).join("");
   return `<div class="view-heading"><div><p>PRODUCT MANAGEMENT</p><h2>상품 관리</h2></div><button id="newProductButton"><i class="fa-solid fa-plus"></i> 새 상품 등록</button></div>
     <section class="panel thumbnail-optimizer"><div><h3>모바일 이미지 빠르게 만들기</h3><p id="thumbnailOptimizationStatus">기존 상품 상태를 확인하고 있습니다.</p></div><button type="button" id="optimizeExistingImages"><i class="fa-solid fa-wand-magic-sparkles"></i> 기존 상품 5장씩 최적화</button></section>
     <section class="panel product-editor" id="productEditor" hidden><div class="panel-head"><div><h3 id="productEditorTitle">새 상품 등록</h3><p>대분류를 고르면 등록 가능한 소분류만 자동으로 표시됩니다.</p></div><button id="closeProductEditor">닫기 ×</button></div>
@@ -350,6 +354,13 @@ function productsTemplate() {
       </form>
     </section>
     <section class="panel product-list-panel"><div class="panel-head"><div><h3>등록 상품 목록</h3><p>상품 이미지와 분류 정보를 확인하고 바로 수정하거나 삭제할 수 있습니다.</p></div><span id="productCount">${dashboardData.products.length}개</span></div>
+      <div class="product-list-filters">
+        <label><span>상품 검색</span><input id="productListSearch" type="search" placeholder="상품명 또는 상품번호"></label>
+        <label><span>브랜드</span><select id="productListBrand"><option value="">전체 브랜드</option>${brandOptions}</select></label>
+        <label><span>카테고리</span><select id="productListCategory"><option value="">전체 카테고리</option>${filterCategoryOptions}</select></label>
+        <label><span>판매 상태</span><select id="productListStatus"><option value="">전체 상태</option><option value="판매중">판매중</option><option value="판매중지">판매중지</option><option value="품절">품절</option></select></label>
+        <button type="button" id="resetProductListFilters"><i class="fa-solid fa-rotate-left"></i> 초기화</button>
+      </div>
       <div class="table-wrap"><table class="product-management-table"><thead><tr><th><input type="checkbox" id="selectAllProducts" aria-label="전체 상품 선택"></th><th>대표 이미지</th><th>상품명</th><th>브랜드</th><th>카테고리</th><th>가격 (₩)</th><th>상세 이미지 갯수</th><th>관리</th></tr></thead><tbody id="productTableBody">
       ${productRowsTemplate(dashboardData.products)}
       </tbody></table></div>
@@ -367,7 +378,7 @@ function productRowsTemplate(products) {
     const thumbnail = product.images?.main?.[0] || product.image || "";
     const thumbnailSrc = thumbnail.startsWith("/uploads/") ? `/thumbnail?src=${encodeURIComponent(thumbnail)}` : thumbnail;
     const detailCount = product.images?.detail?.length || 0;
-    return `<tr data-product-row="${product.id}">
+    return `<tr data-product-row="${product.id}" data-product-name="${safeHtml(String(product.name || "").toLowerCase())}" data-product-brand="${Number(product.brandId || 0)}" data-product-category="${Number(product.categoryId || 0)}" data-product-status="${safeHtml(product.status || "판매중")}">
       <td><input type="checkbox" class="product-row-check" value="${product.id}" aria-label="${safeHtml(product.name)} 선택"></td>
       <td>${thumbnail ? `<img class="product-list-thumb" src="${thumbnailSrc}" data-original="${thumbnail}" alt="${safeHtml(product.name)} 대표 이미지" loading="lazy" onerror="if(this.dataset.original){this.src=this.dataset.original;this.dataset.original='';}">` : `<span class="product-thumb-empty"><i class="fa-regular fa-image"></i></span>`}</td>
       <td><strong class="product-list-name">${safeHtml(product.name)}</strong><small>상품번호 #${product.id}</small></td>
@@ -378,6 +389,33 @@ function productRowsTemplate(products) {
       <td><div class="product-row-actions"><button type="button" class="edit-product" data-product="${product.id}"><i class="fa-solid fa-pen"></i> 수정</button><button type="button" class="delete-product" data-product="${product.id}"><i class="fa-regular fa-trash-can"></i> 삭제</button></div></td>
     </tr>`;
   }).join("");
+}
+
+function filterProductList() {
+  const search = String(document.querySelector("#productListSearch")?.value || "").trim().toLowerCase();
+  const brandId = String(document.querySelector("#productListBrand")?.value || "");
+  const categoryId = String(document.querySelector("#productListCategory")?.value || "");
+  const status = String(document.querySelector("#productListStatus")?.value || "");
+  let visible = 0;
+  document.querySelectorAll("#productTableBody [data-product-row]").forEach((row) => {
+    const matchesSearch = !search || row.dataset.productName.includes(search) || String(row.dataset.productRow).includes(search.replace(/^#/, ""));
+    const matchesBrand = !brandId || row.dataset.productBrand === brandId;
+    const matchesCategory = !categoryId || row.dataset.productCategory === categoryId;
+    const matchesStatus = !status || row.dataset.productStatus === status;
+    const show = matchesSearch && matchesBrand && matchesCategory && matchesStatus;
+    row.hidden = !show;
+    if (show) visible += 1;
+  });
+  const count = document.querySelector("#productCount");
+  if (count) count.textContent = `${visible}개${visible !== dashboardData.products.length ? ` / 전체 ${dashboardData.products.length}개` : ""}`;
+}
+
+function resetProductListFilters() {
+  ["#productListSearch", "#productListBrand", "#productListCategory", "#productListStatus"].forEach((selector) => {
+    const node = document.querySelector(selector);
+    if (node) node.value = "";
+  });
+  filterProductList();
 }
 
 function memberOrders(userId) {
@@ -1570,8 +1608,11 @@ function bindDynamicEvents() {
   document.querySelectorAll(".edit-product").forEach((button) => button.addEventListener("click", () => openProductEditor(Number(button.dataset.product))));
   document.querySelectorAll(".delete-product").forEach((button) => button.addEventListener("click", () => deleteProduct(Number(button.dataset.product))));
   document.querySelector("#selectAllProducts")?.addEventListener("change", (event) => {
-    document.querySelectorAll(".product-row-check").forEach((checkbox) => checkbox.checked = event.currentTarget.checked);
+    document.querySelectorAll("#productTableBody tr:not([hidden]) .product-row-check").forEach((checkbox) => checkbox.checked = event.currentTarget.checked);
   });
+  document.querySelector("#productListSearch")?.addEventListener("input", filterProductList);
+  ["#productListBrand", "#productListCategory", "#productListStatus"].forEach((selector) => document.querySelector(selector)?.addEventListener("change", filterProductList));
+  document.querySelector("#resetProductListFilters")?.addEventListener("click", resetProductListFilters);
   const closeProductEditor = document.querySelector("#closeProductEditor");
   if (closeProductEditor) closeProductEditor.addEventListener("click", closeProductForm);
   const productForm = document.querySelector("#productForm");
