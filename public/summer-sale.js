@@ -3,6 +3,7 @@ const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => 
 let expiresAt = 0;
 let refreshTimer = null;
 let saleName = "시즌세일";
+const SALE_CACHE_KEY = "yoonseul-seasonal-sale-v1";
 
 function productPath(product) {
   return `/product/${Number(product.id)}`;
@@ -29,10 +30,8 @@ function renderCountdown() {
   target.textContent = `${saleName} 상품 교체까지 ${days}일 ${String(hours).padStart(2, "0")}시간 ${String(minutes).padStart(2, "0")}분 ${String(seconds).padStart(2, "0")}초`;
 }
 
-async function loadSale() {
-  const response = await fetch("/api/storefront", { cache: "no-store" });
-  if (!response.ok) throw new Error("세일 상품을 불러오지 못했습니다.");
-  const data = await response.json();
+function renderSale(data) {
+  if (!data || !Array.isArray(data.products) || !Array.isArray(data.brands)) return false;
   saleName = String(data.summerSale?.name || "여름세일");
   const englishNames = { "봄세일": "SPRING CLASSIC SALE", "여름세일": "SUMMER CLASSIC SALE", "가을세일": "AUTUMN CLASSIC SALE", "겨울세일": "WINTER CLASSIC SALE" };
   document.title = `${saleName} | 윤슬마켓`;
@@ -52,6 +51,21 @@ async function loadSale() {
   clearInterval(refreshTimer);
   renderCountdown();
   refreshTimer = setInterval(renderCountdown, 1000);
+  return true;
 }
 
-loadSale().catch((error) => { document.querySelector("#saleContent").innerHTML = `<div class="sale-loading">${escapeHtml(error.message)}</div>`; });
+async function loadSale() {
+  const response = await fetch("/api/storefront", { cache: "no-store" });
+  if (!response.ok) throw new Error("세일 상품을 불러오지 못했습니다.");
+  const data = await response.json();
+  try { localStorage.setItem(SALE_CACHE_KEY, JSON.stringify(data)); } catch {}
+  renderSale(data);
+}
+
+let renderedImmediately = renderSale(window.YOONSEUL_SEASONAL_SALE_BOOTSTRAP);
+if (!renderedImmediately) {
+  try { renderedImmediately = renderSale(JSON.parse(localStorage.getItem(SALE_CACHE_KEY) || "null")); } catch {}
+}
+loadSale().catch((error) => {
+  if (!renderedImmediately) document.querySelector("#saleContent").innerHTML = `<div class="sale-loading">${escapeHtml(error.message)}</div>`;
+});

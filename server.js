@@ -1157,6 +1157,24 @@ function storefrontPayload(db) {
   };
 }
 
+function seasonalSaleBootstrapPayload(db) {
+  const sale = publicSummerSale(db);
+  const saleProductIds = new Set((db.siteSettings.summerSale?.items || []).map((item) => Number(item.productId)));
+  const products = db.products
+    .filter((product) => product.status !== "삭제" && saleProductIds.has(Number(product.id)))
+    .map((product) => storefrontProduct(product, db));
+  const brandIds = new Set(products.map((product) => Number(product.brandId)));
+  return {
+    generatedAt: new Date().toISOString(),
+    summerSale: sale,
+    brands: [...db.brands]
+      .filter((brand) => brandIds.has(Number(brand.id)))
+      .sort((a, b) => Number(a.order || 0) - Number(b.order || 0))
+      .map((brand) => ({ id: Number(brand.id), koName: String(brand.koName || ""), enName: String(brand.enName || "") })),
+    products
+  };
+}
+
 async function handleApi(req, res, url) {
   const db = readDb();
   if (ensureSummerSale(db)) writeDb(db);
@@ -2024,6 +2042,13 @@ Sitemap: ${absoluteSiteUrl("/sitemap.xml")}
           '<nav class="mobile-brand-list" id="mobileBrandDrawerList" aria-label="모바일 브랜드 목록"></nav>',
           `<nav class="mobile-brand-list" id="mobileBrandDrawerList" aria-label="모바일 브랜드 목록"><a class="mobile-summer-sale-link" href="/summer-sale"><span>여름세일</span><small>SUMMER SALE</small></a>${mobileBrands}</nav>`
         );
+    }
+    if (safeTarget === "/summer-sale.html") {
+      const db = readDb();
+      if (ensureSummerSale(db)) writeDb(db);
+      const bootstrap = JSON.stringify(seasonalSaleBootstrapPayload(db)).replace(/</g, "\\u003c");
+      responseData = data.toString("utf8")
+        .replace("</head>", `<script>window.YOONSEUL_SEASONAL_SALE_BOOTSTRAP=${bootstrap};</script></head>`);
     }
     send(
       res,
