@@ -273,16 +273,26 @@ function focusMissingOption() {
 
 function renderDetailImages() {
   const detailImages = Array.isArray(state.product.images?.detail) ? state.product.images.detail.filter(Boolean) : [];
+  const intro = document.querySelector("#detailIntroImage");
   const list = document.querySelector("#detailImageList");
+  const introSource = detailImages[0] || "";
+  const remainingImages = introSource ? detailImages.slice(1) : detailImages;
 
-  if (!detailImages.length) {
-    list.innerHTML = `<div class="detail-image-empty">등록된 상세 이미지가 없습니다.</div>`;
-    return;
+  intro.innerHTML = introSource ? `
+    <img class="detail-progressive-image" src="${thumbnailImageUrl(introSource)}" data-original="${safeHtml(introSource)}" alt="윤슬마켓 상품 안내" loading="eager" fetchpriority="high" decoding="async">
+  ` : "";
+
+  if (!remainingImages.length) {
+    if (introSource) {
+      list.innerHTML = "";
+    } else {
+      list.innerHTML = `<div class="detail-image-empty">등록된 상세 이미지가 없습니다.</div>`;
+    }
+  } else {
+    list.innerHTML = remainingImages.map((source, index) => `
+      <img class="detail-progressive-image" src="${thumbnailImageUrl(source)}" data-original="${safeHtml(source)}" alt="${safeHtml(state.product.name)} 상세 이미지 ${index + 1}" loading="lazy" fetchpriority="low" decoding="async">
+    `).join("");
   }
-
-  list.innerHTML = detailImages.map((source, index) => `
-    <img class="detail-progressive-image" src="${thumbnailImageUrl(source)}" data-original="${safeHtml(source)}" alt="${safeHtml(state.product.name)} 상세 이미지 ${index + 1}" loading="${index === 0 ? "eager" : "lazy"}" fetchpriority="${index === 0 ? "high" : "low"}" decoding="async">
-  `).join("");
 
   const hydrateImage = (image) => {
     const original = image.dataset.original;
@@ -304,7 +314,7 @@ function renderDetailImages() {
     else image.addEventListener("load", loadOriginal, { once: true });
   };
 
-  const images = [...list.querySelectorAll(".detail-progressive-image")];
+  const images = [...intro.querySelectorAll(".detail-progressive-image"), ...list.querySelectorAll(".detail-progressive-image")];
   if (!("IntersectionObserver" in window)) {
     images.forEach(hydrateImage);
     return;

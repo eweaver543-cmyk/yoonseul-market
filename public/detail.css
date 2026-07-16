@@ -794,6 +794,21 @@ a {
   margin: 32px auto 0;
 }
 
+.detail-intro-image {
+  margin: 0 auto 24px;
+}
+
+.detail-intro-image:empty {
+  display: none;
+}
+
+.detail-intro-image img {
+  width: 100%;
+  display: block;
+  border: 1px solid var(--line);
+  background: var(--warm);
+}
+
 .detail-description-card {
   border: 1px solid #E5DCCF;
   border-radius: 12px;
